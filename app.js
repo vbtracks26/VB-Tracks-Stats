@@ -87,7 +87,26 @@ const editButton = document.createElement("button");
 editButton.textContent = "Edit";
 editButton.onclick = () => editPlayer(player.id);
 
-item.append(details, editButton, removeButton);
+
+const buttonRow = document.createElement("div");
+buttonRow.style.display = "flex";
+buttonRow.style.gap = "8px";
+
+editButton.style.width = "auto";
+editButton.style.padding = "8px 16px";
+editButton.style.fontSize = "14px";
+editButton.style.margin = "0";
+editButton.style.flex = "1";
+
+removeButton.style.width = "auto";
+removeButton.style.padding = "8px 16px";
+removeButton.style.fontSize = "14px";
+removeButton.style.margin = "0";
+removeButton.style.flex = "1";
+
+buttonRow.append(editButton, removeButton);
+item.append(details, buttonRow);
+
 
             rosterList.appendChild(item);
         });
