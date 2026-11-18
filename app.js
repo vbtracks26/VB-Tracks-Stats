@@ -133,27 +133,72 @@ function goHome() {
     `;
 }
 
+
 function editPlayer(id) {
     const player = players.find(p => p.id === id);
-
     if (!player) return;
 
-    const newName = prompt("Edit Player Name:", player.name);
-    if (newName === null) return;
+    document.querySelector("main").innerHTML = `
+        <h2>Edit Player</h2>
 
-    const newNumber = prompt("Edit Jersey Number:", player.number);
-    if (newNumber === null) return;
+        <label for="editName">Player Name</label>
+        <input id="editName" placeholder="Player Name">
 
-    const newPosition = prompt(
-        "Edit Position (Setter, Outside Hitter, Middle Hitter, Opposite Hitter, Defensive Specialist, Libero):",
-        player.position
-    );
-    if (newPosition === null) return;
+        <label for="editNumber">Jersey Number</label>
+        <input id="editNumber" type="number" placeholder="Jersey Number">
 
-    if (!newName.trim() || !newNumber.trim() || !newPosition.trim()) {
-        alert("All player information is required.");
+        <label for="editPosition">Position</label>
+        <select id="editPosition">
+            <option>Setter</option>
+            <option>Outside Hitter</option>
+            <option>Middle Hitter</option>
+            <option>Opposite Hitter</option>
+            <option>Defensive Specialist</option>
+            <option>Libero</option>
+        </select>
+
+        <button onclick="savePlayerEdit()">Save Changes</button>
+        <button onclick="openTeamManager()">Cancel</button>
+    `;
+
+    document.getElementById("editName").value = player.name;
+    document.getElementById("editNumber").value = player.number;
+    document.getElementById("editPosition").value = player.position;
+
+    window.editingPlayerId = id;
+}
+
+function savePlayerEdit() {
+    const player = players.find(p => p.id === window.editingPlayerId);
+    if (!player) return;
+
+    const name = document.getElementById("editName").value.trim();
+    const number = document.getElementById("editNumber").value.trim();
+    const position = document.getElementById("editPosition").value;
+
+    if (!name || !number || !position) {
+        alert("Please complete all player information.");
         return;
     }
+
+    if (!/^\d+$/.test(number)) {
+        alert("Please enter a valid jersey number.");
+        return;
+    }
+
+    if (players.some(p => p.id !== player.id && p.number === number)) {
+        alert("That jersey number is already assigned.");
+        return;
+    }
+
+    player.name = name;
+    player.number = number;
+    player.position = position;
+
+    savePlayers();
+    openTeamManager();
+}
+
 
     if (!/^\d+$/.test(newNumber.trim())) {
         alert("Jersey number must contain only numbers.");
