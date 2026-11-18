@@ -85,7 +85,10 @@ function displayRoster() {
             
 const editButton = document.createElement("button");
 editButton.textContent = "Edit";
-editButton.onclick = () => editPlayer(player.id);
+editButton.onclick = () => {
+    alert("Edit button is working!");
+    editPlayer(player.id);
+};
 
 
 const buttonRow = document.createElement("div");
