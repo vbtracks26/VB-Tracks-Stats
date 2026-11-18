@@ -129,3 +129,61 @@ function goHome() {
         <button>Settings</button>
     `;
 }
+
+function editPlayer(id) {
+    const player = players.find(p => p.id === id);
+
+    if (!player) return;
+
+    const newName = prompt("Edit Player Name:", player.name);
+    if (newName === null) return;
+
+    const newNumber = prompt("Edit Jersey Number:", player.number);
+    if (newNumber === null) return;
+
+    const newPosition = prompt(
+        "Edit Position (Setter, Outside Hitter, Middle Hitter, Opposite Hitter, Defensive Specialist, Libero):",
+        player.position
+    );
+    if (newPosition === null) return;
+
+    if (!newName.trim() || !newNumber.trim() || !newPosition.trim()) {
+        alert("All player information is required.");
+        return;
+    }
+
+    if (!/^\d+$/.test(newNumber.trim())) {
+        alert("Jersey number must contain only numbers.");
+        return;
+    }
+
+    if (players.some(p => p.id !== id && p.number === newNumber.trim())) {
+        alert("That jersey number is already assigned.");
+        return;
+    }
+
+    const validPositions = [
+        "Setter",
+        "Outside Hitter",
+        "Middle Hitter",
+        "Opposite Hitter",
+        "Defensive Specialist",
+        "Libero"
+    ];
+
+    const matchedPosition = validPositions.find(
+        position => position.toLowerCase() === newPosition.trim().toLowerCase()
+    );
+
+    if (!matchedPosition) {
+        alert("Please enter a valid volleyball position.");
+        return;
+    }
+
+    player.name = newName.trim();
+    player.number = newNumber.trim();
+    player.position = matchedPosition;
+
+    savePlayers();
+    openTeamManager();
+}
