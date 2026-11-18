@@ -1,10 +1,12 @@
 
 let players = JSON.parse(localStorage.getItem("volleyballPlayers") || "[]");
 
+// SAVE PLAYERS
 function savePlayers() {
     localStorage.setItem("volleyballPlayers", JSON.stringify(players));
 }
 
+// TEAM MANAGER
 function openTeamManager() {
     document.querySelector("main").innerHTML = `
         <h2>Team Manager</h2>
@@ -33,6 +35,7 @@ function openTeamManager() {
     displayRoster();
 }
 
+// ADD PLAYER
 function addPlayer() {
     const name = document.getElementById("playerName").value.trim();
     const number = document.getElementById("playerNumber").value.trim();
@@ -40,6 +43,11 @@ function addPlayer() {
 
     if (!name || !number || !position) {
         alert("Please complete all player information.");
+        return;
+    }
+
+    if (!/^\d+$/.test(number)) {
+        alert("Please enter a valid jersey number.");
         return;
     }
 
@@ -59,8 +67,11 @@ function addPlayer() {
     openTeamManager();
 }
 
+// DISPLAY ROSTER
 function displayRoster() {
     const rosterList = document.getElementById("rosterList");
+    if (!rosterList) return;
+
     rosterList.innerHTML = "";
 
     players
@@ -68,6 +79,7 @@ function displayRoster() {
         .sort((a, b) => Number(a.number) - Number(b.number))
         .forEach(player => {
             const item = document.createElement("div");
+
             item.style.padding = "12px";
             item.style.marginBottom = "10px";
             item.style.background = "white";
@@ -78,65 +90,52 @@ function displayRoster() {
             details.textContent =
                 `#${player.number} - ${player.name} (${player.position})`;
 
+            // EDIT BUTTON
+            const editButton = document.createElement("button");
+            editButton.textContent = "Edit";
+            editButton.onclick = () => editPlayer(player.id);
+
+            // REMOVE BUTTON
             const removeButton = document.createElement("button");
             removeButton.textContent = "Remove";
             removeButton.onclick = () => removePlayer(player.id);
 
-            
-const editButton = document.createElement("button");
-editButton.textContent = "Edit";
-editButton.onclick = () => {
-    alert("Edit button is working!");
-    editPlayer(player.id);
-};
+            // SIDE-BY-SIDE BUTTONS
+            const buttonRow = document.createElement("div");
+            buttonRow.style.display = "flex";
+            buttonRow.style.gap = "8px";
 
+            [editButton, removeButton].forEach(button => {
+                button.style.width = "auto";
+                button.style.padding = "8px 16px";
+                button.style.fontSize = "14px";
+                button.style.margin = "0";
+                button.style.flex = "1";
+            });
 
-const buttonRow = document.createElement("div");
-buttonRow.style.display = "flex";
-buttonRow.style.gap = "8px";
-
-editButton.style.width = "auto";
-editButton.style.padding = "8px 16px";
-editButton.style.fontSize = "14px";
-editButton.style.margin = "0";
-editButton.style.flex = "1";
-
-removeButton.style.width = "auto";
-removeButton.style.padding = "8px 16px";
-removeButton.style.fontSize = "14px";
-removeButton.style.margin = "0";
-removeButton.style.flex = "1";
-
-buttonRow.append(editButton, removeButton);
-item.append(details, buttonRow);
-
+            buttonRow.append(editButton, removeButton);
+            item.append(details, buttonRow);
 
             rosterList.appendChild(item);
         });
 }
 
+// REMOVE PLAYER
 function removePlayer(id) {
     if (!confirm("Remove this player from the roster?")) return;
 
     players = players.filter(player => player.id !== id);
+
     savePlayers();
     openTeamManager();
 }
 
-function goHome() {
-    document.querySelector("main").innerHTML = `
-        <button>New Match</button>
-        <button>Load Match</button>
-        <button onclick="openTeamManager()">Team Manager</button>
-        <button>Season Stats</button>
-        <button>Settings</button>
-    `;
-}
-
-
+// EDIT PLAYER SCREEN
 function editPlayer(id) {
     const player = players.find(p => p.id === id);
     if (!player) return;
+
+    window.editingPlayerId = id;
 
     document.querySelector("main").innerHTML = `
         <h2>Edit Player</h2>
@@ -164,12 +163,14 @@ function editPlayer(id) {
     document.getElementById("editName").value = player.name;
     document.getElementById("editNumber").value = player.number;
     document.getElementById("editPosition").value = player.position;
-
-    window.editingPlayerId = id;
 }
 
+// SAVE PLAYER EDITS
 function savePlayerEdit() {
-    const player = players.find(p => p.id === window.editingPlayerId);
+    const player = players.find(
+        p => p.id === window.editingPlayerId
+    );
+
     if (!player) return;
 
     const name = document.getElementById("editName").value.trim();
@@ -199,39 +200,13 @@ function savePlayerEdit() {
     openTeamManager();
 }
 
-
-    if (!/^\d+$/.test(newNumber.trim())) {
-        alert("Jersey number must contain only numbers.");
-        return;
-    }
-
-    if (players.some(p => p.id !== id && p.number === newNumber.trim())) {
-        alert("That jersey number is already assigned.");
-        return;
-    }
-
-    const validPositions = [
-        "Setter",
-        "Outside Hitter",
-        "Middle Hitter",
-        "Opposite Hitter",
-        "Defensive Specialist",
-        "Libero"
-    ];
-
-    const matchedPosition = validPositions.find(
-        position => position.toLowerCase() === newPosition.trim().toLowerCase()
-    );
-
-    if (!matchedPosition) {
-        alert("Please enter a valid volleyball position.");
-        return;
-    }
-
-    player.name = newName.trim();
-    player.number = newNumber.trim();
-    player.position = matchedPosition;
-
-    savePlayers();
-    openTeamManager();
+// RETURN HOME
+function goHome() {
+    document.querySelector("main").innerHTML = `
+        <button>New Match</button>
+        <button>Load Match</button>
+        <button onclick="openTeamManager()">Team Manager</button>
+        <button>Season Stats</button>
+        <button>Settings</button>
+    `;
 }
