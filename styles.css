@@ -1,3 +1,5 @@
+
+/* GENERAL SETTINGS */
 * {
     box-sizing: border-box;
 }
@@ -10,42 +12,55 @@ body {
     color: #111111;
 }
 
+/* HEADER */
 header {
     background-color: #000000;
     color: #c5a253;
     text-align: center;
-    padding: 32px 20px;
-    border-bottom: 6px solid #c5a253;
+    padding: 24px 16px;
+    border-bottom: 5px solid #c5a253;
 }
 
 header h1 {
     margin: 0;
-    font-size: 36px;
+    font-size: 30px;
 }
 
 header p {
-    margin: 10px 0 0;
+    margin: 8px 0 0;
     color: #ffffff;
-    font-size: 18px;
+    font-size: 16px;
 }
 
+/* MAIN CONTENT */
 main {
-    width: min(90%, 600px);
-    margin: 40px auto;
+    width: min(92%, 600px);
+    margin: 25px auto;
     display: grid;
-    gap: 18px;
+    gap: 12px;
+    justify-items: center;
 }
 
-button {
+main h2,
+main h3 {
     width: 100%;
-    padding: 22px;
-    border: 3px solid #000000;
-    border-radius: 12px;
+    text-align: center;
+}
+
+/* ALL BUTTONS */
+button {
+    width: 150px;
+    max-width: 100%;
+    padding: 8px 12px;
+    border: 2px solid #000000;
+    border-radius: 8px;
     background-color: #c5a253;
     color: #000000;
-    font-size: 22px;
+    font-size: 14px;
     font-weight: bold;
     cursor: pointer;
+    line-height: 1.3;
+    min-height: 36px;
 }
 
 button:hover {
@@ -56,26 +71,49 @@ button:active {
     transform: scale(0.98);
 }
 
-/* SMALLER BUTTONS THROUGHOUT THE APP */
-
-button {
-    width: auto;
-    max-width: 220px;
-    padding: 8px 16px;
-    font-size: 14px;
-    border-radius: 8px;
-    margin: 5px 0;
-    cursor: pointer;
-}
-
-/* KEEP BUTTONS CENTERED */
-main > button {
-    justify-self: center;
+/* PLAYER ROSTER */
+#rosterList {
     width: 100%;
 }
 
-/* KEEP EDIT AND REMOVE SIDE BY SIDE */
 #rosterList button {
+    width: auto;
+    flex: 1;
     max-width: none;
-    margin: 0;
+}
+
+/* INPUTS AND DROPDOWNS */
+input,
+select {
+    width: 100%;
+    max-width: 400px;
+    padding: 10px 12px;
+    border: 2px solid #c5a253;
+    border-radius: 8px;
+    font-size: 16px;
+    background-color: #ffffff;
+    color: #111111;
+}
+
+label {
+    width: 100%;
+    max-width: 400px;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+/* SMALLER SCREEN ADJUSTMENTS */
+@media (max-width: 480px) {
+    header h1 {
+        font-size: 24px;
+    }
+
+    main {
+        width: 94%;
+        gap: 10px;
+    }
+
+    button {
+        width: 140px;
+    }
 }
