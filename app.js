@@ -82,7 +82,13 @@ function displayRoster() {
             removeButton.textContent = "Remove";
             removeButton.onclick = () => removePlayer(player.id);
 
-            item.append(details, removeButton);
+            
+const editButton = document.createElement("button");
+editButton.textContent = "Edit";
+editButton.onclick = () => editPlayer(player.id);
+
+item.append(details, editButton, removeButton);
+
             rosterList.appendChild(item);
         });
 }
