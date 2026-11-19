@@ -210,3 +210,28 @@ function goHome() {
         <button>Settings</button>
     `;
 }
+
+function backupRoster() {
+  const roster = localStorage.getItem("volleyballPlayers");
+
+  if (!roster) {
+    alert("No roster found to back up.");
+    return;
+  }
+
+  const blob = new Blob([roster], {
+    type: "application/json"
+  });
+
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = "VB-Tracks-Roster-Backup.json";
+
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
