@@ -1161,20 +1161,28 @@ function openLiveCourt() {
     </div>
 
     <div class="serving-order-panel">
-      <h3>🏐 Serving Order</h3>
-      <p><strong>Status:</strong> Receiving</p>
-      <p><strong>Next Server:</strong> Not selected</p>
+  <h3>🏐 Serving Order</h3>
 
-      <h4>Serving Rotation</h4>
-      <ol>
-        <li>Player 1</li>
-        <li>Player 2</li>
-        <li>Player 3</li>
-        <li>Player 4</li>
-        <li>Player 5</li>
-        <li>Player 6</li>
-      </ol>
-    </div>
+  <p><strong>Status:</strong> Receiving</p>
+
+  <div class="next-server-box">
+    <strong>NEXT SERVER</strong>
+    <p>Not selected</p>
+    <small>Made: 0 | Missed: 0</small>
+    <small>Aces: 0 | Serve: —</small>
+  </div>
+
+  <h4>Serving Rotation</h4>
+
+  <ol class="serving-stats-list">
+    <li>Player 1 <small>Made: 0 | Missed: 0</small></li>
+    <li>Player 2 <small>Made: 0 | Missed: 0</small></li>
+    <li>Player 3 <small>Made: 0 | Missed: 0</small></li>
+    <li>Player 4 <small>Made: 0 | Missed: 0</small></li>
+    <li>Player 5 <small>Made: 0 | Missed: 0</small></li>
+    <li>Player 6 <small>Made: 0 | Missed: 0</small></li>
+  </ol>
+</div>
 
     <button onclick="goHome()">Back to Home</button>
   `;
