@@ -37,10 +37,6 @@ function openTeamManager() {
     displayRoster();
 }
 
-
-    displayRoster();
-}
-
 // ADD PLAYER
 function addPlayer() {
     const name = document.getElementById("playerName").value.trim();
