@@ -1177,4 +1177,5 @@ function openLiveCourt() {
     </div>
 
     <button onclick="goHome()">Back to Home</button>
-
+  `;
+}
