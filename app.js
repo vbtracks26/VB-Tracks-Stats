@@ -1163,7 +1163,7 @@ function openLiveCourt() {
     <div class="serving-order-panel">
   <h3>🏐 Serving Order</h3>
 
-  <p><strong>Status:</strong> Receiving</p>
+  
 
   <div class="next-server-box">
     <strong>NEXT SERVER</strong>
