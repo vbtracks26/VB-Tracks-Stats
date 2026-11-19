@@ -174,11 +174,21 @@
         document.getElementById("loginPassword").value;
 
       try {
-        await signInWithEmailAndPassword(
-          auth,
-          email,
-          password
-        );
+  const rememberMe =
+    document.getElementById("rememberMe").checked;
+
+  await setPersistence(
+    auth,
+    rememberMe
+      ? browserLocalPersistence
+      : browserSessionPersistence
+  );
+
+  await signInWithEmailAndPassword(
+    auth,
+    email,
+    password
+  );
 
         document.getElementById("loginPassword").value = "";
       } catch (error) {
