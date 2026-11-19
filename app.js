@@ -34,8 +34,23 @@ function openTeamManager() {
         <h3>Team Roster</h3>
         <div id="rosterList"></div>
 
-        <button onclick="backupRoster()">💾 Backup Roster</button>
-        <button onclick="downloadRosterPDF()">📄 Download Roster PDF</button>
+        
+<div style="display: flex; gap: 10px; margin-top: 15px;">
+    <button
+        onclick="backupRoster()"
+        style="flex: 1; width: 50%; margin: 0; padding: 12px 6px; font-size: 14px;"
+    >
+        💾 Backup Roster
+    </button>
+
+    <button
+        onclick="downloadRosterPDF()"
+        style="flex: 1; width: 50%; margin: 0; padding: 12px 6px; font-size: 14px;"
+    >
+        📄 Download PDF
+    </button>
+</div>
+
         <button onclick="goHome()">Back to Home</button>
     `;
 
