@@ -1185,7 +1185,7 @@ function openLiveCourt() {
 </div>
 <div class="live-stats-dashboard">
 
-  <h3>📊 Live Player Stats</h3>
+  <h3>Live Player Stats</h3>
 
   <div class="live-stats-table-wrapper">
     <table class="live-stats-table">
