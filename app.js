@@ -35,6 +35,7 @@ function openTeamManager() {
         <div id="rosterList"></div>
 
         <button onclick="backupRoster()">💾 Backup Roster</button>
+        <button onclick="downloadRosterPDF()">📄 Download Roster PDF</button>
         <button onclick="goHome()">Back to Home</button>
     `;
 
@@ -76,7 +77,6 @@ function addPlayer() {
 // DISPLAY ROSTER
 function displayRoster() {
     const rosterList = document.getElementById("rosterList");
-
     if (!rosterList) return;
 
     rosterList.innerHTML = "";
@@ -247,4 +247,182 @@ function backupRoster() {
     link.remove();
 
     setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+// ESCAPE TEXT FOR SAFE HTML OUTPUT
+function escapeRosterText(value) {
+    return String(value ?? "").replace(
+        /[&<>"']/g,
+        character => ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#39;"
+        })[character]
+    );
+}
+
+// PRINTABLE PDF ROSTER
+function downloadRosterPDF() {
+    if (players.length === 0) {
+        alert("Add players before downloading a roster.");
+        return;
+    }
+
+    const sortedPlayers = players
+        .slice()
+        .sort((a, b) => Number(a.number) - Number(b.number));
+
+    const rows = sortedPlayers.map(player => `
+        <tr>
+            <td>${escapeRosterText(player.number)}</td>
+            <td>${escapeRosterText(player.name)}</td>
+            <td>${escapeRosterText(player.position)}</td>
+        </tr>
+    `).join("");
+
+    const printWindow = window.open("", "_blank");
+
+    if (!printWindow) {
+        alert("Please allow pop-ups to print your roster.");
+        return;
+    }
+
+    printWindow.document.open();
+    printWindow.document.write(`
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <title>Castle Heights Volleyball Roster</title>
+
+            <style>
+                @page {
+                    size: letter;
+                    margin: 0.65in;
+                }
+
+                body {
+                    font-family: Arial, sans-serif;
+                    color: #111;
+                    margin: 0;
+                }
+
+                h1 {
+                    text-align: center;
+                    margin-bottom: 5px;
+                    font-size: 24px;
+                }
+
+                h2 {
+                    text-align: center;
+                    margin-top: 0;
+                    font-size: 16px;
+                    font-weight: normal;
+                }
+
+                .gold-line {
+                    height: 5px;
+                    background: #c5a253;
+                    margin: 20px 0;
+                    print-color-adjust: exact;
+                    -webkit-print-color-adjust: exact;
+                }
+
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    font-size: 13px;
+                }
+
+                th {
+                    background: #111;
+                    color: white;
+                    text-align: left;
+                    padding: 12px;
+                    print-color-adjust: exact;
+                    -webkit-print-color-adjust: exact;
+                }
+
+                td {
+                    border-bottom: 1px solid #ddd;
+                    padding: 11px 12px;
+                }
+
+                th:first-child,
+                td:first-child {
+                    width: 70px;
+                    text-align: center;
+                }
+
+                tr {
+                    break-inside: avoid;
+                }
+
+                thead {
+                    display: table-header-group;
+                }
+
+                .footer {
+                    margin-top: 25px;
+                    font-size: 11px;
+                    color: #666;
+                    text-align: center;
+                }
+
+                .print-button {
+                    display: block;
+                    margin: 20px auto;
+                    padding: 12px 24px;
+                    background: #c5a253;
+                    border: none;
+                    border-radius: 8px;
+                    font-size: 15px;
+                    font-weight: bold;
+                    cursor: pointer;
+                }
+
+                @media print {
+                    .print-button {
+                        display: none;
+                    }
+                }
+            </style>
+        </head>
+
+        <body>
+            <h1>CASTLE HEIGHTS VOLLEYBALL</h1>
+            <h2>Lady Knights | Team Roster</h2>
+
+            <div class="gold-line"></div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Jersey #</th>
+                        <th>Player Name</th>
+                        <th>Position</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${rows}
+                </tbody>
+            </table>
+
+            <div class="footer">
+                Total Players: ${sortedPlayers.length}
+            </div>
+
+            <button
+                class="print-button"
+                onclick="window.print()"
+            >
+                Print / Save as PDF
+            </button>
+        </body>
+        </html>
+    `);
+
+    printWindow.document.close();
 }
