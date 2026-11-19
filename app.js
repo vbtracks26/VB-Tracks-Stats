@@ -1129,3 +1129,26 @@ function downloadRosterPDF() {
 
     printWindow.document.close();
 }
+
+
+function openLiveCourt() {
+  document.querySelector("main").innerHTML = `
+    <h2>🏐 Live Match</h2>
+    <h3>Lady Knights — Set 1</h3>
+
+    <div class="volleyball-court">
+      <div class="court-net">NET</div>
+
+      <div class="court-players">
+        <button>Position 4</button>
+        <button>Position 3</button>
+        <button>Position 2</button>
+        <button>Position 5</button>
+        <button>Position 6</button>
+        <button>Position 1</button>
+      </div>
+    </div>
+
+    <button onclick="goHome()">Back to Home</button>
+  `;
+}
