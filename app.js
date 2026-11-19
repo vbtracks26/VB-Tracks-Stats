@@ -676,6 +676,8 @@ function displayPlayerCards() {
         });
 }
 
+
+```javascript
 // PLAYER PROFILE
 function showPlayerProfile(id) {
     const player = players.find(p => p.id === id);
@@ -687,94 +689,178 @@ function showPlayerProfile(id) {
 
     window.currentProfileId = id;
 
+    const safeName = escapeRosterText(player.name);
+    const safeNumber = escapeRosterText(player.number);
+    const safePosition = escapeRosterText(player.position);
+    const safeGrade = escapeRosterText(gradeLabel(player.grade));
+
     const main = document.querySelector("main");
 
     main.innerHTML = `
         <div id="playerProfile">
+
             <button onclick="openRoster()">
-                ← Back to Roster
+                ← Back to Team Roster
             </button>
 
             <div style="
-                background:#111;
+                background:#171717;
                 color:white;
-                padding:22px;
-                border-radius:14px;
-                margin:15px 0;
-                text-align:center;
+                padding:24px 18px;
+                border-radius:18px;
+                margin:16px 0;
+                border-bottom:5px solid #c5a253;
             ">
+
                 <div style="
                     display:flex;
                     align-items:center;
-                    justify-content:center;
-                    width:95px;
-                    height:95px;
-                    margin:0 auto 12px;
-                    border:3px solid #c5a253;
-                    border-radius:50%;
-                    color:#c5a253;
-                    font-size:30px;
-                    font-weight:bold;
+                    gap:18px;
                 ">
-                    #${escapeRosterText(player.number)}
+
+                    <div style="
+                        width:95px;
+                        height:95px;
+                        min-width:95px;
+                        border-radius:50%;
+                        background:#c5a253;
+                        color:#111;
+                        display:flex;
+                        align-items:center;
+                        justify-content:center;
+                        font-size:34px;
+                        font-weight:900;
+                        border:4px solid white;
+                        box-sizing:border-box;
+                    ">
+                        ${safeNumber}
+                    </div>
+
+                    <div style="min-width:0;">
+                        <h2 style="
+                            color:white;
+                            margin:0 0 8px;
+                            font-size:23px;
+                            overflow-wrap:anywhere;
+                        ">
+                            ${safeName}
+                        </h2>
+
+                        <p style="
+                            color:#c5a253;
+                            margin:0 0 6px;
+                            font-weight:bold;
+                        ">
+                            #${safeNumber} • ${safePosition}
+                        </p>
+
+                        <p style="
+                            color:#ddd;
+                            margin:0;
+                            font-size:14px;
+                        ">
+                            ${safeGrade}
+                        </p>
+                    </div>
                 </div>
-
-                <h2 style="color:white;margin:8px 0;">
-                    ${escapeRosterText(player.name)}
-                </h2>
-
-                <p style="color:#c5a253;">
-                    ${escapeRosterText(player.position)}
-                </p>
             </div>
 
-            <h3>Player Information</h3>
+            <h3>🏐 Player Information</h3>
 
             <div style="
-                padding:15px;
                 background:white;
+                padding:18px;
                 border:1px solid #ddd;
-                border-radius:10px;
+                border-radius:12px;
+                margin-bottom:20px;
             ">
-                <p>
-                    <strong>Jersey Number:</strong>
-                    #${escapeRosterText(player.number)}
-                </p>
-
-                <p>
-                    <strong>Grade:</strong>
-                    ${gradeLabel(player.grade)}
-                </p>
-
-                <p>
-                    <strong>Position:</strong>
-                    ${escapeRosterText(player.position)}
-                </p>
+                <p><strong>Name:</strong> ${safeName}</p>
+                <p><strong>Jersey:</strong> #${safeNumber}</p>
+                <p><strong>Grade:</strong> ${safeGrade}</p>
+                <p><strong>Position:</strong> ${safePosition}</p>
             </div>
 
-            <h3>Season Statistics</h3>
+            <h3>📊 Season Statistics</h3>
 
             <div style="
-                padding:18px;
+                display:grid;
+                grid-template-columns:repeat(3,minmax(0,1fr));
+                gap:10px;
+                margin-bottom:14px;
+            ">
+                ${[
+                    "Kills",
+                    "Aces",
+                    "Digs",
+                    "Assists",
+                    "Blocks",
+                    "Serve %"
+                ].map(stat => `
+                    <div style="
+                        background:#171717;
+                        border:2px solid #c5a253;
+                        border-radius:12px;
+                        padding:14px 5px;
+                        text-align:center;
+                    ">
+                        <div style="
+                            color:#c5a253;
+                            font-size:25px;
+                            font-weight:bold;
+                        ">—</div>
+
+                        <div style="
+                            color:white;
+                            font-size:12px;
+                            margin-top:5px;
+                        ">
+                            ${stat}
+                        </div>
+                    </div>
+                `).join("")}
+            </div>
+
+            <p style="
+                color:#666;
+                text-align:center;
+                font-size:13px;
+                margin-bottom:24px;
+            ">
+                Statistics will appear when match tracking
+                is connected.
+            </p>
+
+            <h3>📅 Match History</h3>
+
+            <div style="
                 background:white;
                 border:2px solid #c5a253;
-                border-radius:10px;
+                border-radius:12px;
+                padding:22px;
                 text-align:center;
+                color:#666;
             ">
-                <p style="font-weight:bold;">
-                    Statistics Coming Soon!
+                <p style="font-weight:bold;color:#111;">
+                    No Matches Recorded Yet
                 </p>
-
-                <p style="color:#666;font-size:14px;">
-                    Kills, aces, digs, blocks, assists,
-                    serve percentage, and match history
-                    will appear here when we add
-                    match tracking.
+                <p style="font-size:14px;">
+                    This player's match history and
+                    individual performance will appear here.
                 </p>
             </div>
+
+            <button
+                onclick="openRoster()"
+                style="margin-top:20px;"
+            >
+                Back to Team Roster
+            </button>
+
         </div>
     `;
 }
+```
+
 
 // BACKUP ROSTER
 function backupRoster() {
