@@ -25,7 +25,7 @@
       border-radius: 14px;
     }
 
-    #loginScreen input {
+    #loginScreen input:not([type="checkbox"]) {
       display: block;
       box-sizing: border-box;
       width: 100%;
@@ -34,19 +34,54 @@
       font-size: 16px;
     }
 
-    #loginScreen button {
+    #loginScreen button[type="submit"] {
       width: 100%;
       padding: 14px;
       background: #c5a253;
+      color: #111;
       border: none;
       border-radius: 8px;
       font-weight: bold;
       cursor: pointer;
     }
 
+    #rememberMeLabel {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin: 16px 0;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    #rememberMe {
+      width: 18px;
+      height: 18px;
+      margin: 0;
+    }
+
+    #forgotPasswordButton {
+      display: block;
+      width: auto;
+      margin: 12px auto 0;
+      padding: 8px;
+      background: transparent;
+      color: #111;
+      border: none;
+      text-decoration: underline;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
     #loginError {
       color: #a00000;
       margin-top: 12px;
+    }
+
+    #resetMessage {
+      margin-top: 12px;
+      font-size: 14px;
     }
 
     #appScreen {
@@ -71,6 +106,7 @@
     <p>Coach's Dashboard</p>
   </header>
 
+  <!-- LOGIN SCREEN -->
   <section id="loginScreen">
     <h2>Welcome to VB Tracks</h2>
     <p>Coach Login</p>
@@ -92,76 +128,70 @@
         required
       >
 
-      <label for="rememberMe" style="
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:10px;
-  margin:16px 0;
-  font-size:14px;
-  cursor:pointer;
-">
-  <input
-    type="checkbox"
-    id="rememberMe"
-    checked
-    style="width:18px;height:18px;margin:0;"
-  >
-  Remember me on this device
-</label>
+      <label id="rememberMeLabel" for="rememberMe">
+        <input
+          type="checkbox"
+          id="rememberMe"
+          checked
+        >
+        Remember me on this device
+      </label>
 
-<button type="submit">Sign In</button>
-<button
-  type="button"
-  id="forgotPasswordButton"
-  style="
-    background:none;
-    color:#111;
-    text-decoration:underline;
-    font-size:14px;
-    padding:10px;
-    margin-top:8px;
-  "
->
-  Forgot Password?
-</button>
+      <button type="submit">Sign In</button>
+    </form>
+
+    <button
+      type="button"
+      id="forgotPasswordButton"
+    >
+      Forgot Password?
+    </button>
+
     <p id="loginError" role="alert"></p>
+    <p id="resetMessage" role="status"></p>
   </section>
 
+  <!-- MAIN APP -->
   <div id="appScreen">
     <button id="logoutButton">Sign Out</button>
 
     <main>
       <button>New Match</button>
       <button>Load Match</button>
+
       <button onclick="openRoster()">
-  🏐 Team Roster
-</button>
-<button onclick="openTeamManager()">
-  Team Manager
-</button>
+        🏐 Team Roster
+      </button>
+
+      <button onclick="openTeamManager()">
+        Team Manager
+      </button>
+
       <button>Season Stats</button>
       <button>Settings</button>
     </main>
   </div>
 
+  <!-- LOAD VB TRACKS -->
   <script>
     const js = document.createElement("script");
     js.src = "app.js?v=" + Date.now();
     document.body.appendChild(js);
   </script>
 
+  <!-- FIREBASE AUTHENTICATION -->
   <script type="module">
-    import { auth, db } from "./firebase-config.js";
+    import { auth } from "./firebase-config.js";
 
     import {
-  signInWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged,
-  setPersistence,
-  browserLocalPersistence,
-  browserSessionPersistence
-} from "https://www.gstatic.com/firebasejs/13.4.0/firebase-auth.js";
+      signInWithEmailAndPassword,
+      signOut,
+      onAuthStateChanged,
+      setPersistence,
+      browserLocalPersistence,
+      browserSessionPersistence,
+      sendPasswordResetEmail
+    } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-auth.js";
 
     const loginScreen =
       document.getElementById("loginScreen");
@@ -172,68 +202,148 @@
     const loginError =
       document.getElementById("loginError");
 
+    const resetMessage =
+      document.getElementById("resetMessage");
+
     const loginForm =
       document.getElementById("loginForm");
 
+    const forgotPasswordButton =
+      document.getElementById("forgotPasswordButton");
+
+    // SIGN IN
     loginForm.addEventListener("submit", async (event) => {
       event.preventDefault();
 
       loginError.textContent = "";
+      resetMessage.textContent = "";
 
       const email =
-        document.getElementById("loginEmail").value;
+        document.getElementById("loginEmail").value.trim();
 
       const password =
         document.getElementById("loginPassword").value;
 
+      const rememberMe =
+        document.getElementById("rememberMe").checked;
+
       try {
-  const rememberMe =
-    document.getElementById("rememberMe").checked;
+        await setPersistence(
+          auth,
+          rememberMe
+            ? browserLocalPersistence
+            : browserSessionPersistence
+        );
 
-  await setPersistence(
-    auth,
-    rememberMe
-      ? browserLocalPersistence
-      : browserSessionPersistence
-  );
-
-  await signInWithEmailAndPassword(
-    auth,
-    email,
-    password
-  );
+        await signInWithEmailAndPassword(
+          auth,
+          email,
+          password
+        );
 
         document.getElementById("loginPassword").value = "";
+
       } catch (error) {
         loginError.textContent =
           "Unable to sign in. Check your email and password.";
+
         console.error("Sign-in error:", error.code);
       }
     });
 
-   onAuthStateChanged(auth, (user) => {
-  if (user) {
-    loginScreen.style.display = "none";
-    appScreen.style.display = "block";
+    // FORGOT PASSWORD
+    forgotPasswordButton.addEventListener("click", async () => {
+      loginError.textContent = "";
+      resetMessage.textContent = "";
 
-    // Make the signed-in user's ID available to VB Tracks.
-    window.vbTracksUserId = user.uid;
+      let email =
+        document.getElementById("loginEmail").value.trim();
 
-  } else {
-    loginScreen.style.display = "block";
-    appScreen.style.display = "none";
+      if (!email) {
+        email = window.prompt(
+          "Enter the email address for your VB Tracks account:"
+        );
 
-    window.vbTracksUserId = null;
-  }
-});
+        if (email === null) return;
+
+        email = email.trim();
+      }
+
+      if (!email) {
+        resetMessage.style.color = "#a00000";
+        resetMessage.textContent =
+          "Please enter your email address.";
+        return;
+      }
+
+      const emailInput = document.createElement("input");
+      emailInput.type = "email";
+      emailInput.value = email;
+
+      if (!emailInput.checkValidity()) {
+        resetMessage.style.color = "#a00000";
+        resetMessage.textContent =
+          "Please enter a valid email address.";
+        return;
+      }
+
+      forgotPasswordButton.disabled = true;
+      forgotPasswordButton.textContent = "Sending...";
+
+      try {
+        await sendPasswordResetEmail(auth, email);
+
+        resetMessage.style.color = "#216e39";
+        resetMessage.textContent =
+          "If an account exists for this email, " +
+          "a password reset link will be sent. " +
+          "Check your inbox and spam folder.";
+
+      } catch (error) {
+        console.error("Password reset error:", error.code);
+
+        resetMessage.style.color = "#a00000";
+        resetMessage.textContent =
+          "Unable to send the reset email right now. " +
+          "Please try again later.";
+      } finally {
+        forgotPasswordButton.disabled = false;
+        forgotPasswordButton.textContent = "Forgot Password?";
+      }
+    });
+
+    // KEEP LOGIN STATUS UPDATED
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        loginScreen.style.display = "none";
+        appScreen.style.display = "block";
+
+        window.vbTracksUserId = user.uid;
+
+      } else {
+        loginScreen.style.display = "block";
+        appScreen.style.display = "none";
+
+        window.vbTracksUserId = null;
+      }
+    });
+
+    // SIGN OUT
     document.getElementById("logoutButton")
       .addEventListener("click", async () => {
         try {
           await signOut(auth);
-          goHome();
+
+          if (typeof goHome === "function") {
+            goHome();
+          }
+
         } catch (error) {
           console.error("Sign-out error:", error.code);
-          alert("Unable to sign out. Please try again.");
+
+          alert(
+            "Unable to sign out. Please try again."
+          );
         }
       });
   </script>
