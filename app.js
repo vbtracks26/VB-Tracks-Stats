@@ -1,13 +1,17 @@
 
-let players = JSON.parse(localStorage.getItem("volleyballPlayers") || "[]");
+let players = JSON.parse(
+    localStorage.getItem("volleyballPlayers") || "[]"
+);
 
 // SAVE PLAYERS
 function savePlayers() {
-    localStorage.setItem("volleyballPlayers", JSON.stringify(players));
+    localStorage.setItem(
+        "volleyballPlayers",
+        JSON.stringify(players)
+    );
 }
 
 // TEAM MANAGER
-
 function openTeamManager() {
     document.querySelector("main").innerHTML = `
         <h2>Team Manager</h2>
@@ -72,6 +76,7 @@ function addPlayer() {
 // DISPLAY ROSTER
 function displayRoster() {
     const rosterList = document.getElementById("rosterList");
+
     if (!rosterList) return;
 
     rosterList.innerHTML = "";
@@ -124,7 +129,9 @@ function displayRoster() {
 
 // REMOVE PLAYER
 function removePlayer(id) {
-    if (!confirm("Remove this player from the roster?")) return;
+    if (!confirm("Remove this player from the roster?")) {
+        return;
+    }
 
     players = players.filter(player => player.id !== id);
 
@@ -135,6 +142,7 @@ function removePlayer(id) {
 // EDIT PLAYER SCREEN
 function editPlayer(id) {
     const player = players.find(p => p.id === id);
+
     if (!player) return;
 
     window.editingPlayerId = id;
@@ -189,7 +197,9 @@ function savePlayerEdit() {
         return;
     }
 
-    if (players.some(p => p.id !== player.id && p.number === number)) {
+    if (players.some(
+        p => p.id !== player.id && p.number === number
+    )) {
         alert("That jersey number is already assigned.");
         return;
     }
