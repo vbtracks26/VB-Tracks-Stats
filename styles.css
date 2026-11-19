@@ -347,3 +347,14 @@ main:has(.volleyball-court) .volleyball-court {
     padding: 10px 6px;
   }
 }
+/* HIGHLIGHT NEXT SERVER */
+
+.next-server-box {
+  border: 4px solid #c5a253;
+  box-shadow: 0 0 12px rgba(197, 162, 83, 0.45);
+}
+
+.next-server-box strong {
+  font-size: 16px;
+  letter-spacing: 1px;
+}
