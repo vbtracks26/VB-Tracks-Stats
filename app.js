@@ -7,6 +7,7 @@ function savePlayers() {
 }
 
 // TEAM MANAGER
+
 function openTeamManager() {
     document.querySelector("main").innerHTML = `
         <h2>Team Manager</h2>
@@ -25,13 +26,17 @@ function openTeamManager() {
         </select>
 
         <button onclick="addPlayer()">Add Player</button>
-        <button onclick="backupRoster()">💾 Backup Roster</button>
 
         <h3>Team Roster</h3>
         <div id="rosterList"></div>
 
+        <button onclick="backupRoster()">💾 Backup Roster</button>
         <button onclick="goHome()">Back to Home</button>
     `;
+
+    displayRoster();
+}
+
 
     displayRoster();
 }
