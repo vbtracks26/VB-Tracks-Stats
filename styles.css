@@ -413,3 +413,11 @@ main:has(.volleyball-court) .volleyball-court {
 .live-stats-table td {
   padding: 8px 10px;
 }
+/* DIVIDER BETWEEN COURT AND BENCH STATS */
+
+.live-stats-dashboard h4:nth-of-type(2) {
+  border-top: 2px solid #c5a253;
+  padding-top: 18px;
+  margin-top: 18px;
+  margin-bottom: 10px;
+}
