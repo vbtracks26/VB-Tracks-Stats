@@ -423,8 +423,6 @@ function previewMatchSetup() {
     previewArea.insertAdjacentElement("afterend", startButton);
 }
 
-}
-
 
 // TEAM MANAGER
 function openTeamManager() {
