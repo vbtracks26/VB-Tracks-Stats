@@ -165,16 +165,21 @@
       }
     });
 
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        loginScreen.style.display = "none";
-        appScreen.style.display = "block";
-      } else {
-        loginScreen.style.display = "block";
-        appScreen.style.display = "none";
-      }
-    });
+   onAuthStateChanged(auth, (user) => {
+  if (user) {
+    loginScreen.style.display = "none";
+    appScreen.style.display = "block";
 
+    // Make the signed-in user's ID available to VB Tracks.
+    window.vbTracksUserId = user.uid;
+
+  } else {
+    loginScreen.style.display = "block";
+    appScreen.style.display = "none";
+
+    window.vbTracksUserId = null;
+  }
+});
     document.getElementById("logoutButton")
       .addEventListener("click", async () => {
         try {
