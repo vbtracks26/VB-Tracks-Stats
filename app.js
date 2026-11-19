@@ -332,7 +332,7 @@ function goHome() {
        <button onclick="openMatchSetup()">New Match</button>
         <button>Load Match</button>
         <button onclick="openRoster()">
-            🏐 Team Roster
+            🏐 Roster
         </button>
         <button onclick="openTeamManager()">
             Team Manager
