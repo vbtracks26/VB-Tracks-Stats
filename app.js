@@ -1247,7 +1247,7 @@ function openLiveCourt() {
     </table>
   </div>
 
-    <h4>On the Bench — Substitutes</h4>
+    <h4>On the Bench</h4>
 
 <div id="benchPlayers" class="live-stats-table-wrapper">
   <table class="live-stats-table">
