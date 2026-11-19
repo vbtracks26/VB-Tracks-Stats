@@ -210,3 +210,57 @@ main:has(#editName) > button {
         font-size: 11px;
     }
 }
+
+/* LIVE COURT AND SERVING ORDER SIDE BY SIDE */
+main:has(.volleyball-court) {
+  width: 96%;
+  max-width: 1050px;
+  grid-template-columns: minmax(0, 2fr) minmax(180px, 1fr);
+  align-items: start;
+  column-gap: 16px;
+}
+
+main:has(.volleyball-court) > h2,
+main:has(.volleyball-court) > h3,
+main:has(.volleyball-court) > button {
+  grid-column: 1 / -1;
+}
+
+main:has(.volleyball-court) .volleyball-court {
+  grid-column: 1;
+  margin: 0;
+  min-width: 0;
+}
+
+.serving-order-panel {
+  grid-column: 2;
+  width: 100%;
+  min-width: 0;
+  padding: 14px;
+  background: #ffffff;
+  border: 2px solid #c5a253;
+  border-radius: 12px;
+}
+
+.serving-order-panel h3 {
+  margin-top: 0;
+}
+
+.serving-order-panel ol {
+  padding-left: 24px;
+}
+
+.serving-order-panel li {
+  padding: 5px 0;
+}
+
+@media (max-width: 600px) {
+  main:has(.volleyball-court) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  main:has(.volleyball-court) .volleyball-court,
+  main:has(.volleyball-court) .serving-order-panel {
+    grid-column: 1;
+  }
+}
