@@ -1183,7 +1183,70 @@ function openLiveCourt() {
     <li>Player 6 <small>Made: 0 | Missed: 0</small></li>
   </ol>
 </div>
+<div class="live-stats-dashboard">
 
+  <h3>📊 Live Player Stats</h3>
+
+  <div class="live-stats-table-wrapper">
+    <table class="live-stats-table">
+      <thead>
+        <tr>
+          <th>Player</th>
+          <th>Kills</th>
+          <th>Digs</th>
+          <th>Assists</th>
+          <th>Blocks</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr>
+          <td>Player 1</td>
+          <td>0</td>
+          <td>0</td>
+          <td>0</td>
+          <td>0</td>
+        </tr>
+        <tr>
+          <td>Player 2</td>
+          <td>0</td>
+          <td>0</td>
+          <td>0</td>
+          <td>0</td>
+        </tr>
+        <tr>
+          <td>Player 3</td>
+          <td>0</td>
+          <td>0</td>
+          <td>0</td>
+          <td>0</td>
+        </tr>
+        <tr>
+          <td>Player 4</td>
+          <td>0</td>
+          <td>0</td>
+          <td>0</td>
+          <td>0</td>
+        </tr>
+        <tr>
+          <td>Player 5</td>
+          <td>0</td>
+          <td>0</td>
+          <td>0</td>
+          <td>0</td>
+        </tr>
+        <tr>
+          <td>Player 6</td>
+          <td>0</td>
+          <td>0</td>
+          <td>0</td>
+          <td>0</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
     <button onclick="goHome()">Back to Home</button>
   `;
 }
