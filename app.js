@@ -329,7 +329,7 @@ function refreshCurrentPage() {
 // HOME DASHBOARD
 function goHome() {
     document.querySelector("main").innerHTML = `
-        <button>New Match</button>
+       <button onclick="openMatchSetup()">New Match</button>
         <button>Load Match</button>
         <button onclick="openRoster()">
             🏐 Team Roster
@@ -341,6 +341,78 @@ function goHome() {
         <button>Settings</button>
     `;
 }
+
+
+
+function openMatchSetup() {
+    document.querySelector("main").innerHTML = `
+        <h2>🏐 New Match</h2>
+        <p>Castle Heights Lady Knights</p>
+
+        <label for="matchOpponent">Opponent</label>
+        <input
+            id="matchOpponent"
+            type="text"
+            placeholder="Enter opponent name"
+        >
+
+        <label for="matchDate">Match Date</label>
+        <input id="matchDate" type="date">
+
+        <label for="matchLocation">Location</label>
+        <select id="matchLocation">
+            <option value="Home">Home</option>
+            <option value="Away">Away</option>
+            <option value="Neutral">Neutral / Tournament</option>
+        </select>
+
+        <label for="matchSets">Number of Sets</label>
+        <select id="matchSets">
+            <option value="3">3 Sets (Default)</option>
+            <option value="4">4 Sets</option>
+            <option value="5">5 Sets</option>
+        </select>
+
+        <button onclick="previewMatchSetup()">
+            Preview Match
+        </button>
+
+        <p id="matchPreviewMessage"></p>
+
+        <button onclick="goHome()">
+            Back to Home
+        </button>
+    `;
+
+    const today = new Date();
+    const localDate = new Date(
+        today.getTime() - today.getTimezoneOffset() * 60000
+    ).toISOString().slice(0, 10);
+
+    document.getElementById("matchDate").value = localDate;
+}
+
+function previewMatchSetup() {
+    const opponent = document.getElementById("matchOpponent")
+        .value.trim();
+
+    const date = document.getElementById("matchDate").value;
+    const location = document.getElementById("matchLocation").value;
+    const sets = document.getElementById("matchSets").value;
+
+    if (!opponent || !date) {
+        alert("Please enter an opponent and match date.");
+        return;
+    }
+
+    document.getElementById("matchPreviewMessage").textContent =
+        "Match ready: " + opponent +
+        " | " + date +
+        " | " + location +
+        " | " + sets + " sets. " +
+        "This is a preview only. Nothing has been saved.";
+}
+
 
 // TEAM MANAGER
 function openTeamManager() {
