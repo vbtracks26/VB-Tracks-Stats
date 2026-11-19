@@ -1250,10 +1250,32 @@ function openLiveCourt() {
 </div>
     <h4>On the Bench — Substitutes</h4>
 
-<div id="benchPlayers">
-  ${players.map(player => `
-    <p>${player.name || "Unnamed Player"}</p>
-  `).join("")}
+<div id="benchPlayers" class="live-stats-table-wrapper">
+  <table class="live-stats-table">
+    <thead>
+      <tr>
+        <th>Player</th>
+        <th>Kills</th>
+        <th>Digs</th>
+        <th>Assists</th>
+        <th>Blocks</th>
+        <th>Substitution</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      ${players.map(player => `
+        <tr>
+          <td>${player.name || "Unnamed Player"}</td>
+          <td>0</td>
+          <td>0</td>
+          <td>0</td>
+          <td>0</td>
+          <td>—</td>
+        </tr>
+      `).join("")}
+    </tbody>
+  </table>
 </div>
     <button onclick="goHome()">Back to Home</button>
   `;
