@@ -410,7 +410,19 @@ function previewMatchSetup() {
         " | " + date +
         " | " + location +
         " | " + sets + " sets. " +
-        "This is a preview only. Nothing has been saved.";
+        
+"This is a preview only. Nothing has been saved.";
+
+    const previewArea =
+        document.getElementById("matchPreviewMessage");
+
+    const startButton = document.createElement("button");
+    startButton.textContent = "🏐 Start Match";
+    startButton.onclick = openLiveCourt;
+
+    previewArea.insertAdjacentElement("afterend", startButton);
+}
+
 }
 
 
