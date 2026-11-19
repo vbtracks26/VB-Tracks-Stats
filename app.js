@@ -1186,6 +1186,7 @@ function openLiveCourt() {
 <div class="live-stats-dashboard">
 
   <h3>Live Player Stats</h3>
+<h4>On the Court</h4>
 
   <div class="live-stats-table-wrapper">
     <table class="live-stats-table">
@@ -1246,6 +1247,13 @@ function openLiveCourt() {
     </table>
   </div>
 
+</div>
+    <h4>On the Bench — Substitutes</h4>
+
+<div id="benchPlayers">
+  ${players.map(player => `
+    <p>${player.name || "Unnamed Player"}</p>
+  `).join("")}
 </div>
     <button onclick="goHome()">Back to Home</button>
   `;
