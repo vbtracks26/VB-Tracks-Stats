@@ -25,6 +25,7 @@ function openTeamManager() {
         </select>
 
         <button onclick="addPlayer()">Add Player</button>
+        <button onclick="backupRoster()">💾 Backup Roster</button>
 
         <h3>Team Roster</h3>
         <div id="rosterList"></div>
@@ -211,27 +212,28 @@ function goHome() {
     `;
 }
 
+// BACKUP ROSTER
 function backupRoster() {
-  const roster = localStorage.getItem("volleyballPlayers");
+    const roster = localStorage.getItem("volleyballPlayers");
 
-  if (!roster) {
-    alert("No roster found to back up.");
-    return;
-  }
+    if (!roster) {
+        alert("No roster found to back up.");
+        return;
+    }
 
-  const blob = new Blob([roster], {
-    type: "application/json"
-  });
+    const blob = new Blob([roster], {
+        type: "application/json"
+    });
 
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
 
-  link.href = url;
-  link.download = "VB-Tracks-Roster-Backup.json";
+    link.href = url;
+    link.download = "VB-Tracks-Roster-Backup.json";
 
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
 
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
