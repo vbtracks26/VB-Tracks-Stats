@@ -3,21 +3,311 @@ let players = JSON.parse(
     localStorage.getItem("volleyballPlayers") || "[]"
 );
 
-// SAVE PLAYERS
-function savePlayers() {
+// FIREBASE CLOUD ROSTER
+let cloudReady = false;
+let cloudUserId = null;
+let cloudRosterRef = null;
+let cloudApi = null;
+let unsubscribeRoster = null;
+let saveQueue = Promise.resolve();
+let pendingSaves = 0;
+let cloudGeneration = 0;
+
+function setCloudStatus(message, isError = false) {
+    window.vbTracksCloudStatus = message;
+
+    const status = document.getElementById("cloudStatus");
+
+    if (status) {
+        status.textContent = message;
+        status.style.color = isError ? "#a00000" : "#333";
+    }
+}
+
+function localRosterCopy() {
+    return JSON.parse(
+        localStorage.getItem("volleyballPlayers") || "[]"
+    );
+}
+
+function saveLocalRoster() {
     localStorage.setItem(
         "volleyballPlayers",
         JSON.stringify(players)
     );
 }
 
+function requireCloud() {
+    if (cloudReady && cloudUserId && cloudRosterRef) {
+        return true;
+    }
+
+    alert(
+        "Your cloud roster is still loading or unavailable. " +
+        "No changes were made. Please try again when " +
+        "the status says Cloud connected."
+    );
+
+    return false;
+}
+
+// SAVE PLAYERS TO FIREBASE
+function savePlayers() {
+    saveLocalRoster();
+
+    const uid = cloudUserId;
+    const ref = cloudRosterRef;
+    const generation = cloudGeneration;
+    const snapshot = players.map(player => ({ ...player }));
+
+    pendingSaves++;
+    setCloudStatus("Saving to cloud…");
+
+    saveQueue = saveQueue
+        .catch(() => {})
+        .then(async () => {
+            if (
+                generation !== cloudGeneration ||
+                uid !== cloudUserId ||
+                !ref
+            ) {
+                return;
+            }
+
+            await cloudApi.setDoc(ref, {
+                players: snapshot,
+                updatedAt: cloudApi.serverTimestamp()
+            });
+        })
+        .then(() => {
+            if (generation === cloudGeneration) {
+                pendingSaves--;
+
+                if (pendingSaves === 0) {
+                    setCloudStatus("☁️ Cloud connected — saved");
+                }
+            }
+        })
+        .catch(error => {
+            if (generation === cloudGeneration) {
+                pendingSaves--;
+                cloudReady = false;
+
+                setCloudStatus(
+                    "⚠️ Cloud save failed. Your local backup " +
+                    "remains on this device.",
+                    true
+                );
+
+                console.error("Roster save failed:", error);
+
+                alert(
+                    "Cloud save failed. Your changes remain " +
+                    "in this browser, but are NOT synced. " +
+                    "Do not edit the roster on another device."
+                );
+            }
+        });
+}
+
+// INITIALIZE CLOUD ROSTER
+async function initializeCloudRoster(user, db, firestore) {
+    const generation = ++cloudGeneration;
+
+    if (unsubscribeRoster) {
+        unsubscribeRoster();
+        unsubscribeRoster = null;
+    }
+
+    cloudReady = false;
+    cloudUserId = user.uid;
+    cloudApi = firestore;
+
+    cloudRosterRef = firestore.doc(
+        db,
+        "users",
+        user.uid,
+        "rosters",
+        "main"
+    );
+
+    setCloudStatus("Connecting to cloud…");
+
+    try {
+        const local = localRosterCopy();
+
+        // Only create the cloud roster if one does not exist.
+        const initial = await firestore.runTransaction(
+            db,
+            async transaction => {
+                const existing = await transaction.get(
+                    cloudRosterRef
+                );
+
+                if (existing.exists()) {
+                    return existing.data();
+                }
+
+                transaction.set(cloudRosterRef, {
+                    players: local,
+                    createdAt: firestore.serverTimestamp(),
+                    updatedAt: firestore.serverTimestamp()
+                });
+
+                return { players: local };
+            }
+        );
+
+        if (generation !== cloudGeneration) {
+            return;
+        }
+
+        players = Array.isArray(initial.players)
+            ? initial.players
+            : [];
+
+        saveLocalRoster();
+
+        cloudReady = true;
+        setCloudStatus("☁️ Cloud connected");
+
+        if (document.getElementById("rosterList")) {
+            displayRoster();
+        }
+
+        // Listen for changes from another device.
+        unsubscribeRoster = firestore.onSnapshot(
+            cloudRosterRef,
+            snapshot => {
+                if (
+                    generation !== cloudGeneration ||
+                    !snapshot.exists() ||
+                    pendingSaves > 0
+                ) {
+                    return;
+                }
+
+                const remote = snapshot.data().players;
+
+                if (!Array.isArray(remote)) {
+                    return;
+                }
+
+                players = remote;
+                saveLocalRoster();
+
+                setCloudStatus("☁️ Cloud connected");
+
+                if (document.getElementById("rosterList")) {
+                    displayRoster();
+                }
+            },
+            error => {
+                if (generation !== cloudGeneration) {
+                    return;
+                }
+
+                cloudReady = false;
+
+                setCloudStatus(
+                    "⚠️ Cloud connection lost. Reload to retry.",
+                    true
+                );
+
+                console.error("Roster listener failed:", error);
+            }
+        );
+    } catch (error) {
+        if (generation !== cloudGeneration) {
+            return;
+        }
+
+        cloudReady = false;
+
+        setCloudStatus(
+            "⚠️ Cloud connection failed. " +
+            "Check Firebase permissions and reload.",
+            true
+        );
+
+        console.error("Cloud initialization failed:", error);
+    }
+}
+
+// CONNECT FIREBASE
+(async function connectCloud() {
+    try {
+        const [
+            { auth, db },
+            firestore,
+            authApi
+        ] = await Promise.all([
+            import("./firebase-config.js"),
+            import(
+                "https://www.gstatic.com/firebasejs/13.4.0/firebase-firestore.js"
+            ),
+            import(
+                "https://www.gstatic.com/firebasejs/13.4.0/firebase-auth.js"
+            )
+        ]);
+
+        authApi.onAuthStateChanged(auth, user => {
+            if (user) {
+                initializeCloudRoster(user, db, firestore);
+            } else {
+                ++cloudGeneration;
+
+                if (unsubscribeRoster) {
+                    unsubscribeRoster();
+                    unsubscribeRoster = null;
+                }
+
+                cloudReady = false;
+                cloudUserId = null;
+                cloudRosterRef = null;
+
+                // Preserve the browser backup during sign-in.
+                // It may contain the roster we need to migrate.
+                players = localRosterCopy();
+
+                setCloudStatus(
+                    "Sign in to load your roster"
+                );
+            }
+        });
+    } catch (error) {
+        setCloudStatus(
+            "⚠️ Firebase could not load. Reload to retry.",
+            true
+        );
+
+        console.error("Firebase import failed:", error);
+    }
+})();
+
 // TEAM MANAGER
 function openTeamManager() {
     document.querySelector("main").innerHTML = `
         <h2>Team Manager</h2>
 
-        <input id="playerName" placeholder="Player Name">
-        <input id="playerNumber" type="number" placeholder="Jersey Number">
+        <p
+            id="cloudStatus"
+            role="status"
+            style="text-align:center;font-size:13px;"
+        >
+            ${window.vbTracksCloudStatus || "Connecting to cloud…"}
+        </p>
+
+        <input
+            id="playerName"
+            placeholder="Player Name"
+        >
+
+        <input
+            id="playerNumber"
+            type="number"
+            placeholder="Jersey Number"
+        >
 
         <select id="playerPosition">
             <option value="">Select Position</option>
@@ -29,29 +319,48 @@ function openTeamManager() {
             <option>Libero</option>
         </select>
 
-        <button onclick="addPlayer()">Add Player</button>
+        <button onclick="addPlayer()">
+            Add Player
+        </button>
 
         <h3>Team Roster</h3>
         <div id="rosterList"></div>
 
-        
-<div style="display: flex; gap: 10px; margin-top: 15px;">
-    <button
-        onclick="backupRoster()"
-        style="flex: 1; width: 50%; margin: 0; padding: 12px 6px; font-size: 14px;"
-    >
-        💾 Backup Roster
-    </button>
+        <div style="
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        ">
+            <button
+                onclick="backupRoster()"
+                style="
+                    flex: 1;
+                    min-width: 0;
+                    margin: 0;
+                    padding: 12px 6px;
+                    font-size: 14px;
+                "
+            >
+                💾 Backup Roster
+            </button>
 
-    <button
-        onclick="downloadRosterPDF()"
-        style="flex: 1; width: 50%; margin: 0; padding: 12px 6px; font-size: 14px;"
-    >
-        📄 Download PDF
-    </button>
-</div>
+            <button
+                onclick="downloadRosterPDF()"
+                style="
+                    flex: 1;
+                    min-width: 0;
+                    margin: 0;
+                    padding: 12px 6px;
+                    font-size: 14px;
+                "
+            >
+                📄 Download PDF
+            </button>
+        </div>
 
-        <button onclick="goHome()">Back to Home</button>
+        <button onclick="goHome()">
+            Back to Home
+        </button>
     `;
 
     displayRoster();
@@ -59,9 +368,19 @@ function openTeamManager() {
 
 // ADD PLAYER
 function addPlayer() {
-    const name = document.getElementById("playerName").value.trim();
-    const number = document.getElementById("playerNumber").value.trim();
-    const position = document.getElementById("playerPosition").value;
+    if (!requireCloud()) return;
+
+    const name = document
+        .getElementById("playerName")
+        .value.trim();
+
+    const number = document
+        .getElementById("playerNumber")
+        .value.trim();
+
+    const position = document
+        .getElementById("playerPosition")
+        .value;
 
     if (!name || !number || !position) {
         alert("Please complete all player information.");
@@ -92,13 +411,17 @@ function addPlayer() {
 // DISPLAY ROSTER
 function displayRoster() {
     const rosterList = document.getElementById("rosterList");
+
     if (!rosterList) return;
 
     rosterList.innerHTML = "";
 
     players
         .slice()
-        .sort((a, b) => Number(a.number) - Number(b.number))
+        .sort(
+            (a, b) =>
+                Number(a.number) - Number(b.number)
+        )
         .forEach(player => {
             const item = document.createElement("div");
 
@@ -109,21 +432,20 @@ function displayRoster() {
             item.style.borderRadius = "10px";
 
             const details = document.createElement("p");
+
             details.textContent =
                 `#${player.number} - ${player.name} (${player.position})`;
 
-            // EDIT BUTTON
             const editButton = document.createElement("button");
             editButton.textContent = "Edit";
             editButton.onclick = () => editPlayer(player.id);
 
-            // REMOVE BUTTON
             const removeButton = document.createElement("button");
             removeButton.textContent = "Remove";
             removeButton.onclick = () => removePlayer(player.id);
 
-            // SIDE-BY-SIDE BUTTONS
             const buttonRow = document.createElement("div");
+
             buttonRow.style.display = "flex";
             buttonRow.style.gap = "8px";
 
@@ -135,8 +457,15 @@ function displayRoster() {
                 button.style.flex = "1";
             });
 
-            buttonRow.append(editButton, removeButton);
-            item.append(details, buttonRow);
+            buttonRow.append(
+                editButton,
+                removeButton
+            );
+
+            item.append(
+                details,
+                buttonRow
+            );
 
             rosterList.appendChild(item);
         });
@@ -144,19 +473,27 @@ function displayRoster() {
 
 // REMOVE PLAYER
 function removePlayer(id) {
+    if (!requireCloud()) return;
+
     if (!confirm("Remove this player from the roster?")) {
         return;
     }
 
-    players = players.filter(player => player.id !== id);
+    players = players.filter(
+        player => player.id !== id
+    );
 
     savePlayers();
     openTeamManager();
 }
 
-// EDIT PLAYER SCREEN
+// EDIT PLAYER
 function editPlayer(id) {
-    const player = players.find(p => p.id === id);
+    if (!requireCloud()) return;
+
+    const player = players.find(
+        p => p.id === id
+    );
 
     if (!player) return;
 
@@ -165,13 +502,29 @@ function editPlayer(id) {
     document.querySelector("main").innerHTML = `
         <h2>Edit Player</h2>
 
-        <label for="editName">Player Name</label>
-        <input id="editName" placeholder="Player Name">
+        <label for="editName">
+            Player Name
+        </label>
 
-        <label for="editNumber">Jersey Number</label>
-        <input id="editNumber" type="number" placeholder="Jersey Number">
+        <input
+            id="editName"
+            placeholder="Player Name"
+        >
 
-        <label for="editPosition">Position</label>
+        <label for="editNumber">
+            Jersey Number
+        </label>
+
+        <input
+            id="editNumber"
+            type="number"
+            placeholder="Jersey Number"
+        >
+
+        <label for="editPosition">
+            Position
+        </label>
+
         <select id="editPosition">
             <option>Setter</option>
             <option>Outside Hitter</option>
@@ -181,26 +534,46 @@ function editPlayer(id) {
             <option>Libero</option>
         </select>
 
-        <button onclick="savePlayerEdit()">Save Changes</button>
-        <button onclick="openTeamManager()">Cancel</button>
+        <button onclick="savePlayerEdit()">
+            Save Changes
+        </button>
+
+        <button onclick="openTeamManager()">
+            Cancel
+        </button>
     `;
 
-    document.getElementById("editName").value = player.name;
-    document.getElementById("editNumber").value = player.number;
-    document.getElementById("editPosition").value = player.position;
+    document.getElementById("editName").value =
+        player.name;
+
+    document.getElementById("editNumber").value =
+        player.number;
+
+    document.getElementById("editPosition").value =
+        player.position;
 }
 
 // SAVE PLAYER EDITS
 function savePlayerEdit() {
+    if (!requireCloud()) return;
+
     const player = players.find(
         p => p.id === window.editingPlayerId
     );
 
     if (!player) return;
 
-    const name = document.getElementById("editName").value.trim();
-    const number = document.getElementById("editNumber").value.trim();
-    const position = document.getElementById("editPosition").value;
+    const name = document
+        .getElementById("editName")
+        .value.trim();
+
+    const number = document
+        .getElementById("editNumber")
+        .value.trim();
+
+    const position = document
+        .getElementById("editPosition")
+        .value;
 
     if (!name || !number || !position) {
         alert("Please complete all player information.");
@@ -212,9 +585,13 @@ function savePlayerEdit() {
         return;
     }
 
-    if (players.some(
-        p => p.id !== player.id && p.number === number
-    )) {
+    if (
+        players.some(
+            p =>
+                p.id !== player.id &&
+                p.number === number
+        )
+    ) {
         alert("That jersey number is already assigned.");
         return;
     }
@@ -232,7 +609,9 @@ function goHome() {
     document.querySelector("main").innerHTML = `
         <button>New Match</button>
         <button>Load Match</button>
-        <button onclick="openTeamManager()">Team Manager</button>
+        <button onclick="openTeamManager()">
+            Team Manager
+        </button>
         <button>Season Stats</button>
         <button>Settings</button>
     `;
@@ -240,12 +619,20 @@ function goHome() {
 
 // BACKUP ROSTER
 function backupRoster() {
-    const roster = localStorage.getItem("volleyballPlayers");
+    if (!cloudReady) {
+        alert(
+            "Please wait for your cloud roster " +
+            "to connect before backing up."
+        );
+        return;
+    }
 
-    if (!roster) {
+    if (players.length === 0) {
         alert("No roster found to back up.");
         return;
     }
+
+    const roster = JSON.stringify(players);
 
     const blob = new Blob([roster], {
         type: "application/json"
@@ -261,7 +648,10 @@ function backupRoster() {
     link.click();
     link.remove();
 
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    setTimeout(
+        () => URL.revokeObjectURL(url),
+        1000
+    );
 }
 
 // ESCAPE TEXT FOR SAFE HTML OUTPUT
@@ -280,6 +670,8 @@ function escapeRosterText(value) {
 
 // PRINTABLE PDF ROSTER
 function downloadRosterPDF() {
+    if (!requireCloud()) return;
+
     if (players.length === 0) {
         alert("Add players before downloading a roster.");
         return;
@@ -287,7 +679,10 @@ function downloadRosterPDF() {
 
     const sortedPlayers = players
         .slice()
-        .sort((a, b) => Number(a.number) - Number(b.number));
+        .sort(
+            (a, b) =>
+                Number(a.number) - Number(b.number)
+        );
 
     const rows = sortedPlayers.map(player => `
         <tr>
@@ -305,6 +700,7 @@ function downloadRosterPDF() {
     }
 
     printWindow.document.open();
+
     printWindow.document.write(`
         <!DOCTYPE html>
         <html lang="en">
@@ -420,6 +816,7 @@ function downloadRosterPDF() {
                         <th>Position</th>
                     </tr>
                 </thead>
+
                 <tbody>
                     ${rows}
                 </tbody>
