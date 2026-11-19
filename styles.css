@@ -421,3 +421,36 @@ main:has(.volleyball-court) .volleyball-court {
   margin-top: 18px;
   margin-bottom: 10px;
 }
+
+/* FINAL FIX - TWO SEPARATE STATS BOXES */
+
+.live-stats-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  padding: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.live-stats-dashboard .stats-section {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  margin: 0;
+  border: 3px solid #c5a253;
+  border-radius: 12px;
+  background: #ffffff;
+  box-sizing: border-box;
+}
+
+.live-stats-dashboard .stats-section h3 {
+  margin: 0 0 12px;
+  padding: 12px;
+  background: #171717;
+  color: #c5a253;
+  text-align: center;
+  border-radius: 8px;
+}
