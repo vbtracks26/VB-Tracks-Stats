@@ -677,7 +677,6 @@ function displayPlayerCards() {
 }
 
 
-```javascript
 // PLAYER PROFILE
 function showPlayerProfile(id) {
     const player = players.find(p => p.id === id);
@@ -859,7 +858,7 @@ function showPlayerProfile(id) {
         </div>
     `;
 }
-```
+
 
 
 // BACKUP ROSTER
