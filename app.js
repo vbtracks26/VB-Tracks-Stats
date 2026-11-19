@@ -1276,6 +1276,9 @@ function openLiveCourt() {
     </tbody>
   </table>
 </div>
-    <button onclick="goHome()">Back to Home</button>
+
+</div>
+
+<button onclick="goHome()">Back to Home</button>
   `;
 }
