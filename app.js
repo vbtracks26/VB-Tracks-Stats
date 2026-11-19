@@ -3,7 +3,6 @@ let players = JSON.parse(
     localStorage.getItem("volleyballPlayers") || "[]"
 );
 
-// FIREBASE CLOUD ROSTER
 let cloudReady = false;
 let cloudUserId = null;
 let cloudRosterRef = null;
@@ -13,8 +12,62 @@ let saveQueue = Promise.resolve();
 let pendingSaves = 0;
 let cloudGeneration = 0;
 
+const positions = [
+    "Setter",
+    "Outside Hitter",
+    "Middle Hitter",
+    "Opposite Hitter",
+    "Defensive Specialist",
+    "Libero"
+];
+
+function gradeLabel(grade) {
+    if (String(grade) === "7") return "7th Grade";
+    if (String(grade) === "8") return "8th Grade";
+    return "Not Set";
+}
+
+function positionOptions(selected = "") {
+    return positions.map(position => `
+        <option value="${position}"
+            ${position === selected ? "selected" : ""}>
+            ${position}
+        </option>
+    `).join("");
+}
+
+function gradeOptions(selected = "") {
+    return `
+        <option value="" ${!selected ? "selected" : ""}>
+            Select Grade
+        </option>
+        <option value="7"
+            ${String(selected) === "7" ? "selected" : ""}>
+            7th Grade
+        </option>
+        <option value="8"
+            ${String(selected) === "8" ? "selected" : ""}>
+            8th Grade
+        </option>
+    `;
+}
+
+function escapeRosterText(value) {
+    return String(value ?? "").replace(
+        /[&<>"']/g,
+        character => ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#39;"
+        })[character]
+    );
+}
+
 function setCloudStatus(message, isError = false) {
     window.vbTracksCloudStatus = message;
+    window.vbTracksCloudError = isError;
 
     const status = document.getElementById("cloudStatus");
 
@@ -25,9 +78,15 @@ function setCloudStatus(message, isError = false) {
 }
 
 function localRosterCopy() {
-    return JSON.parse(
-        localStorage.getItem("volleyballPlayers") || "[]"
-    );
+    try {
+        const saved = JSON.parse(
+            localStorage.getItem("volleyballPlayers") || "[]"
+        );
+        return Array.isArray(saved) ? saved : [];
+    } catch (error) {
+        console.error("Local roster error:", error);
+        return [];
+    }
 }
 
 function saveLocalRoster() {
@@ -44,14 +103,11 @@ function requireCloud() {
 
     alert(
         "Your cloud roster is still loading or unavailable. " +
-        "No changes were made. Please try again when " +
-        "the status says Cloud connected."
+        "No changes were made. Please wait for Cloud connected."
     );
-
     return false;
 }
 
-// SAVE PLAYERS TO FIREBASE
 function savePlayers() {
     saveLocalRoster();
 
@@ -94,23 +150,21 @@ function savePlayers() {
                 cloudReady = false;
 
                 setCloudStatus(
-                    "⚠️ Cloud save failed. Your local backup " +
-                    "remains on this device.",
+                    "⚠️ Cloud save failed. Local backup preserved.",
                     true
                 );
 
                 console.error("Roster save failed:", error);
 
                 alert(
-                    "Cloud save failed. Your changes remain " +
-                    "in this browser, but are NOT synced. " +
-                    "Do not edit the roster on another device."
+                    "Cloud save failed. Your changes are saved " +
+                    "in this browser but have NOT synced. " +
+                    "Do not edit on another device."
                 );
             }
         });
 }
 
-// INITIALIZE CLOUD ROSTER
 async function initializeCloudRoster(user, db, firestore) {
     const generation = ++cloudGeneration;
 
@@ -136,7 +190,6 @@ async function initializeCloudRoster(user, db, firestore) {
     try {
         const local = localRosterCopy();
 
-        // Only create the cloud roster if one does not exist.
         const initial = await firestore.runTransaction(
             db,
             async transaction => {
@@ -158,24 +211,18 @@ async function initializeCloudRoster(user, db, firestore) {
             }
         );
 
-        if (generation !== cloudGeneration) {
-            return;
-        }
+        if (generation !== cloudGeneration) return;
 
         players = Array.isArray(initial.players)
             ? initial.players
             : [];
 
         saveLocalRoster();
-
         cloudReady = true;
         setCloudStatus("☁️ Cloud connected");
 
-        if (document.getElementById("rosterList")) {
-            displayRoster();
-        }
+        refreshCurrentPage();
 
-        // Listen for changes from another device.
         unsubscribeRoster = firestore.onSnapshot(
             cloudRosterRef,
             snapshot => {
@@ -189,26 +236,17 @@ async function initializeCloudRoster(user, db, firestore) {
 
                 const remote = snapshot.data().players;
 
-                if (!Array.isArray(remote)) {
-                    return;
-                }
+                if (!Array.isArray(remote)) return;
 
                 players = remote;
                 saveLocalRoster();
-
                 setCloudStatus("☁️ Cloud connected");
-
-                if (document.getElementById("rosterList")) {
-                    displayRoster();
-                }
+                refreshCurrentPage();
             },
             error => {
-                if (generation !== cloudGeneration) {
-                    return;
-                }
+                if (generation !== cloudGeneration) return;
 
                 cloudReady = false;
-
                 setCloudStatus(
                     "⚠️ Cloud connection lost. Reload to retry.",
                     true
@@ -218,23 +256,17 @@ async function initializeCloudRoster(user, db, firestore) {
             }
         );
     } catch (error) {
-        if (generation !== cloudGeneration) {
-            return;
-        }
+        if (generation !== cloudGeneration) return;
 
         cloudReady = false;
-
         setCloudStatus(
-            "⚠️ Cloud connection failed. " +
-            "Check Firebase permissions and reload.",
+            "⚠️ Cloud connection failed. Reload to retry.",
             true
         );
-
         console.error("Cloud initialization failed:", error);
     }
 }
 
-// CONNECT FIREBASE
 (async function connectCloud() {
     try {
         const [
@@ -265,14 +297,9 @@ async function initializeCloudRoster(user, db, firestore) {
                 cloudReady = false;
                 cloudUserId = null;
                 cloudRosterRef = null;
-
-                // Preserve the browser backup during sign-in.
-                // It may contain the roster we need to migrate.
                 players = localRosterCopy();
 
-                setCloudStatus(
-                    "Sign in to load your roster"
-                );
+                setCloudStatus("Sign in to load your roster");
             }
         });
     } catch (error) {
@@ -280,28 +307,55 @@ async function initializeCloudRoster(user, db, firestore) {
             "⚠️ Firebase could not load. Reload to retry.",
             true
         );
-
         console.error("Firebase import failed:", error);
     }
 })();
+
+function refreshCurrentPage() {
+    if (document.getElementById("rosterList")) {
+        displayRoster();
+    }
+
+    if (document.getElementById("playerCards")) {
+        displayPlayerCards();
+    }
+
+    if (document.getElementById("playerProfile")) {
+        const id = window.currentProfileId;
+        if (id) showPlayerProfile(id);
+    }
+}
+
+// HOME DASHBOARD
+function goHome() {
+    document.querySelector("main").innerHTML = `
+        <button>New Match</button>
+        <button>Load Match</button>
+        <button onclick="openRoster()">
+            🏐 Team Roster
+        </button>
+        <button onclick="openTeamManager()">
+            Team Manager
+        </button>
+        <button>Season Stats</button>
+        <button>Settings</button>
+    `;
+}
 
 // TEAM MANAGER
 function openTeamManager() {
     document.querySelector("main").innerHTML = `
         <h2>Team Manager</h2>
 
-        <p
-            id="cloudStatus"
-            role="status"
-            style="text-align:center;font-size:13px;"
-        >
-            ${window.vbTracksCloudStatus || "Connecting to cloud…"}
+        <p id="cloudStatus" role="status"
+           style="text-align:center;font-size:13px;">
+            ${escapeRosterText(
+                window.vbTracksCloudStatus ||
+                "Connecting to cloud…"
+            )}
         </p>
 
-        <input
-            id="playerName"
-            placeholder="Player Name"
-        >
+        <input id="playerName" placeholder="Player Name">
 
         <input
             id="playerNumber"
@@ -309,80 +363,56 @@ function openTeamManager() {
             placeholder="Jersey Number"
         >
 
-        <select id="playerPosition">
-            <option value="">Select Position</option>
-            <option>Setter</option>
-            <option>Outside Hitter</option>
-            <option>Middle Hitter</option>
-            <option>Opposite Hitter</option>
-            <option>Defensive Specialist</option>
-            <option>Libero</option>
+        <select id="playerGrade">
+            ${gradeOptions()}
         </select>
 
-        <button onclick="addPlayer()">
-            Add Player
-        </button>
+        <select id="playerPosition">
+            <option value="">Select Position</option>
+            ${positionOptions()}
+        </select>
+
+        <button onclick="addPlayer()">Add Player</button>
 
         <h3>Team Roster</h3>
         <div id="rosterList"></div>
 
-        <div style="
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-        ">
-            <button
-                onclick="backupRoster()"
-                style="
-                    flex: 1;
-                    min-width: 0;
-                    margin: 0;
-                    padding: 12px 6px;
-                    font-size: 14px;
-                "
-            >
+        <div style="display:flex;gap:10px;margin-top:15px;">
+            <button onclick="backupRoster()"
+                style="flex:1;min-width:0;margin:0;
+                padding:12px 6px;font-size:14px;">
                 💾 Backup Roster
             </button>
 
-            <button
-                onclick="downloadRosterPDF()"
-                style="
-                    flex: 1;
-                    min-width: 0;
-                    margin: 0;
-                    padding: 12px 6px;
-                    font-size: 14px;
-                "
-            >
+            <button onclick="downloadRosterPDF()"
+                style="flex:1;min-width:0;margin:0;
+                padding:12px 6px;font-size:14px;">
                 📄 Download PDF
             </button>
         </div>
 
-        <button onclick="goHome()">
-            Back to Home
-        </button>
+        <button onclick="goHome()">Back to Home</button>
     `;
 
     displayRoster();
 }
 
-// ADD PLAYER
 function addPlayer() {
     if (!requireCloud()) return;
 
-    const name = document
-        .getElementById("playerName")
+    const name = document.getElementById("playerName")
         .value.trim();
 
-    const number = document
-        .getElementById("playerNumber")
+    const number = document.getElementById("playerNumber")
         .value.trim();
 
-    const position = document
-        .getElementById("playerPosition")
+    const grade = document.getElementById("playerGrade")
         .value;
 
-    if (!name || !number || !position) {
+    const position = document.getElementById("playerPosition")
+        .value;
+
+    if (!name || !number || !grade || !position) {
         alert("Please complete all player information.");
         return;
     }
@@ -392,7 +422,9 @@ function addPlayer() {
         return;
     }
 
-    if (players.some(player => player.number === number)) {
+    if (players.some(player =>
+        String(player.number) === number
+    )) {
         alert("That jersey number is already assigned.");
         return;
     }
@@ -401,6 +433,7 @@ function addPlayer() {
         id: Date.now().toString() + Math.random(),
         name,
         number,
+        grade,
         position
     });
 
@@ -408,33 +441,30 @@ function addPlayer() {
     openTeamManager();
 }
 
-// DISPLAY ROSTER
 function displayRoster() {
     const rosterList = document.getElementById("rosterList");
-
     if (!rosterList) return;
 
     rosterList.innerHTML = "";
 
-    players
-        .slice()
-        .sort(
-            (a, b) =>
-                Number(a.number) - Number(b.number)
-        )
+    players.slice()
+        .sort((a, b) => Number(a.number) - Number(b.number))
         .forEach(player => {
             const item = document.createElement("div");
 
-            item.style.padding = "12px";
-            item.style.marginBottom = "10px";
-            item.style.background = "white";
-            item.style.border = "2px solid #c5a253";
-            item.style.borderRadius = "10px";
+            item.style.cssText = `
+                padding:12px;
+                margin-bottom:10px;
+                background:white;
+                border:2px solid #c5a253;
+                border-radius:10px;
+            `;
 
             const details = document.createElement("p");
-
             details.textContent =
-                `#${player.number} - ${player.name} (${player.position})`;
+                "#" + player.number + " - " +
+                player.name + " (" + player.position +
+                ") • " + gradeLabel(player.grade);
 
             const editButton = document.createElement("button");
             editButton.textContent = "Edit";
@@ -445,56 +475,35 @@ function displayRoster() {
             removeButton.onclick = () => removePlayer(player.id);
 
             const buttonRow = document.createElement("div");
-
-            buttonRow.style.display = "flex";
-            buttonRow.style.gap = "8px";
+            buttonRow.style.cssText = "display:flex;gap:8px;";
 
             [editButton, removeButton].forEach(button => {
-                button.style.width = "auto";
-                button.style.padding = "8px 16px";
-                button.style.fontSize = "14px";
-                button.style.margin = "0";
-                button.style.flex = "1";
+                button.style.cssText = `
+                    flex:1;width:auto;margin:0;
+                    padding:8px 16px;font-size:14px;
+                `;
             });
 
-            buttonRow.append(
-                editButton,
-                removeButton
-            );
-
-            item.append(
-                details,
-                buttonRow
-            );
-
+            buttonRow.append(editButton, removeButton);
+            item.append(details, buttonRow);
             rosterList.appendChild(item);
         });
 }
 
-// REMOVE PLAYER
 function removePlayer(id) {
     if (!requireCloud()) return;
 
-    if (!confirm("Remove this player from the roster?")) {
-        return;
-    }
+    if (!confirm("Remove this player from the roster?")) return;
 
-    players = players.filter(
-        player => player.id !== id
-    );
-
+    players = players.filter(player => player.id !== id);
     savePlayers();
     openTeamManager();
 }
 
-// EDIT PLAYER
 function editPlayer(id) {
     if (!requireCloud()) return;
 
-    const player = players.find(
-        p => p.id === id
-    );
-
+    const player = players.find(p => p.id === id);
     if (!player) return;
 
     window.editingPlayerId = id;
@@ -502,58 +511,30 @@ function editPlayer(id) {
     document.querySelector("main").innerHTML = `
         <h2>Edit Player</h2>
 
-        <label for="editName">
-            Player Name
-        </label>
+        <label for="editName">Player Name</label>
+        <input id="editName" placeholder="Player Name">
 
-        <input
-            id="editName"
-            placeholder="Player Name"
-        >
+        <label for="editNumber">Jersey Number</label>
+        <input id="editNumber" type="number">
 
-        <label for="editNumber">
-            Jersey Number
-        </label>
-
-        <input
-            id="editNumber"
-            type="number"
-            placeholder="Jersey Number"
-        >
-
-        <label for="editPosition">
-            Position
-        </label>
-
-        <select id="editPosition">
-            <option>Setter</option>
-            <option>Outside Hitter</option>
-            <option>Middle Hitter</option>
-            <option>Opposite Hitter</option>
-            <option>Defensive Specialist</option>
-            <option>Libero</option>
+        <label for="editGrade">Grade</label>
+        <select id="editGrade">
+            ${gradeOptions(player.grade)}
         </select>
 
-        <button onclick="savePlayerEdit()">
-            Save Changes
-        </button>
+        <label for="editPosition">Position</label>
+        <select id="editPosition">
+            ${positionOptions(player.position)}
+        </select>
 
-        <button onclick="openTeamManager()">
-            Cancel
-        </button>
+        <button onclick="savePlayerEdit()">Save Changes</button>
+        <button onclick="openTeamManager()">Cancel</button>
     `;
 
-    document.getElementById("editName").value =
-        player.name;
-
-    document.getElementById("editNumber").value =
-        player.number;
-
-    document.getElementById("editPosition").value =
-        player.position;
+    document.getElementById("editName").value = player.name;
+    document.getElementById("editNumber").value = player.number;
 }
 
-// SAVE PLAYER EDITS
 function savePlayerEdit() {
     if (!requireCloud()) return;
 
@@ -563,19 +544,19 @@ function savePlayerEdit() {
 
     if (!player) return;
 
-    const name = document
-        .getElementById("editName")
+    const name = document.getElementById("editName")
         .value.trim();
 
-    const number = document
-        .getElementById("editNumber")
+    const number = document.getElementById("editNumber")
         .value.trim();
 
-    const position = document
-        .getElementById("editPosition")
+    const grade = document.getElementById("editGrade")
         .value;
 
-    if (!name || !number || !position) {
+    const position = document.getElementById("editPosition")
+        .value;
+
+    if (!name || !number || !grade || !position) {
         alert("Please complete all player information.");
         return;
     }
@@ -585,45 +566,220 @@ function savePlayerEdit() {
         return;
     }
 
-    if (
-        players.some(
-            p =>
-                p.id !== player.id &&
-                p.number === number
-        )
-    ) {
+    if (players.some(p =>
+        p.id !== player.id &&
+        String(p.number) === number
+    )) {
         alert("That jersey number is already assigned.");
         return;
     }
 
     player.name = name;
     player.number = number;
+    player.grade = grade;
     player.position = position;
 
     savePlayers();
     openTeamManager();
 }
 
-// RETURN HOME
-function goHome() {
+// VIEW-ONLY ROSTER
+function openRoster() {
     document.querySelector("main").innerHTML = `
-        <button>New Match</button>
-        <button>Load Match</button>
-        <button onclick="openTeamManager()">
-            Team Manager
-        </button>
-        <button>Season Stats</button>
-        <button>Settings</button>
+        <h2>🏐 Team Roster</h2>
+        <p style="text-align:center;color:#666;">
+            Castle Heights Lady Knights
+        </p>
+
+        <div id="playerCards"></div>
+
+        <button onclick="goHome()">Back to Home</button>
+    `;
+
+    displayPlayerCards();
+}
+
+function displayPlayerCards() {
+    const container = document.getElementById("playerCards");
+    if (!container) return;
+
+    container.innerHTML = "";
+
+    if (players.length === 0) {
+        container.textContent = "No players on the roster yet.";
+        return;
+    }
+
+    players.slice()
+        .sort((a, b) => Number(a.number) - Number(b.number))
+        .forEach(player => {
+            const card = document.createElement("button");
+
+            card.style.cssText = `
+                display:flex;
+                align-items:center;
+                gap:14px;
+                width:100%;
+                margin:0 0 12px;
+                padding:15px;
+                text-align:left;
+                background:white;
+                color:#111;
+                border:2px solid #c5a253;
+                border-radius:12px;
+                cursor:pointer;
+            `;
+
+            const avatar = document.createElement("span");
+            avatar.textContent = "#" + player.number;
+            avatar.style.cssText = `
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                flex-shrink:0;
+                width:60px;
+                height:60px;
+                border-radius:50%;
+                background:#111;
+                color:#c5a253;
+                font-size:18px;
+                font-weight:bold;
+            `;
+
+            const info = document.createElement("span");
+            info.style.cssText = "display:block;flex:1;";
+
+            const name = document.createElement("strong");
+            name.textContent = player.name;
+            name.style.cssText = `
+                display:block;
+                font-size:17px;
+                margin-bottom:5px;
+            `;
+
+            const details = document.createElement("span");
+            details.textContent =
+                gradeLabel(player.grade) +
+                " • " + player.position;
+            details.style.cssText = `
+                display:block;
+                font-size:13px;
+                color:#555;
+            `;
+
+            info.append(name, details);
+            card.append(avatar, info);
+
+            card.onclick = () => showPlayerProfile(player.id);
+
+            container.appendChild(card);
+        });
+}
+
+// PLAYER PROFILE
+function showPlayerProfile(id) {
+    const player = players.find(p => p.id === id);
+
+    if (!player) {
+        openRoster();
+        return;
+    }
+
+    window.currentProfileId = id;
+
+    const main = document.querySelector("main");
+
+    main.innerHTML = `
+        <div id="playerProfile">
+            <button onclick="openRoster()">
+                ← Back to Roster
+            </button>
+
+            <div style="
+                background:#111;
+                color:white;
+                padding:22px;
+                border-radius:14px;
+                margin:15px 0;
+                text-align:center;
+            ">
+                <div style="
+                    display:flex;
+                    align-items:center;
+                    justify-content:center;
+                    width:95px;
+                    height:95px;
+                    margin:0 auto 12px;
+                    border:3px solid #c5a253;
+                    border-radius:50%;
+                    color:#c5a253;
+                    font-size:30px;
+                    font-weight:bold;
+                ">
+                    #${escapeRosterText(player.number)}
+                </div>
+
+                <h2 style="color:white;margin:8px 0;">
+                    ${escapeRosterText(player.name)}
+                </h2>
+
+                <p style="color:#c5a253;">
+                    ${escapeRosterText(player.position)}
+                </p>
+            </div>
+
+            <h3>Player Information</h3>
+
+            <div style="
+                padding:15px;
+                background:white;
+                border:1px solid #ddd;
+                border-radius:10px;
+            ">
+                <p>
+                    <strong>Jersey Number:</strong>
+                    #${escapeRosterText(player.number)}
+                </p>
+
+                <p>
+                    <strong>Grade:</strong>
+                    ${gradeLabel(player.grade)}
+                </p>
+
+                <p>
+                    <strong>Position:</strong>
+                    ${escapeRosterText(player.position)}
+                </p>
+            </div>
+
+            <h3>Season Statistics</h3>
+
+            <div style="
+                padding:18px;
+                background:white;
+                border:2px solid #c5a253;
+                border-radius:10px;
+                text-align:center;
+            ">
+                <p style="font-weight:bold;">
+                    Statistics Coming Soon!
+                </p>
+
+                <p style="color:#666;font-size:14px;">
+                    Kills, aces, digs, blocks, assists,
+                    serve percentage, and match history
+                    will appear here when we add
+                    match tracking.
+                </p>
+            </div>
+        </div>
     `;
 }
 
 // BACKUP ROSTER
 function backupRoster() {
     if (!cloudReady) {
-        alert(
-            "Please wait for your cloud roster " +
-            "to connect before backing up."
-        );
+        alert("Wait for your cloud roster to connect.");
         return;
     }
 
@@ -632,11 +788,10 @@ function backupRoster() {
         return;
     }
 
-    const roster = JSON.stringify(players);
-
-    const blob = new Blob([roster], {
-        type: "application/json"
-    });
+    const blob = new Blob(
+        [JSON.stringify(players, null, 2)],
+        { type: "application/json" }
+    );
 
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -648,27 +803,10 @@ function backupRoster() {
     link.click();
     link.remove();
 
-    setTimeout(
-        () => URL.revokeObjectURL(url),
-        1000
-    );
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-// ESCAPE TEXT FOR SAFE HTML OUTPUT
-function escapeRosterText(value) {
-    return String(value ?? "").replace(
-        /[&<>"']/g,
-        character => ({
-            "&": "&amp;",
-            "<": "&lt;",
-            ">": "&gt;",
-            '"': "&quot;",
-            "'": "&#39;"
-        })[character]
-    );
-}
-
-// PRINTABLE PDF ROSTER
+// PRINTABLE ROSTER
 function downloadRosterPDF() {
     if (!requireCloud()) return;
 
@@ -677,17 +815,15 @@ function downloadRosterPDF() {
         return;
     }
 
-    const sortedPlayers = players
-        .slice()
-        .sort(
-            (a, b) =>
-                Number(a.number) - Number(b.number)
-        );
+    const sortedPlayers = players.slice().sort(
+        (a, b) => Number(a.number) - Number(b.number)
+    );
 
     const rows = sortedPlayers.map(player => `
         <tr>
             <td>${escapeRosterText(player.number)}</td>
             <td>${escapeRosterText(player.name)}</td>
+            <td>${escapeRosterText(gradeLabel(player.grade))}</td>
             <td>${escapeRosterText(player.position)}</td>
         </tr>
     `).join("");
@@ -710,93 +846,92 @@ function downloadRosterPDF() {
 
             <style>
                 @page {
-                    size: letter;
-                    margin: 0.65in;
+                    size:letter;
+                    margin:0.65in;
                 }
 
                 body {
-                    font-family: Arial, sans-serif;
-                    color: #111;
-                    margin: 0;
+                    font-family:Arial,sans-serif;
+                    color:#111;
+                    margin:0;
                 }
 
                 h1 {
-                    text-align: center;
-                    margin-bottom: 5px;
-                    font-size: 24px;
+                    text-align:center;
+                    margin-bottom:5px;
+                    font-size:24px;
                 }
 
                 h2 {
-                    text-align: center;
-                    margin-top: 0;
-                    font-size: 16px;
-                    font-weight: normal;
+                    text-align:center;
+                    margin-top:0;
+                    font-size:16px;
+                    font-weight:normal;
                 }
 
                 .gold-line {
-                    height: 5px;
-                    background: #c5a253;
-                    margin: 20px 0;
-                    print-color-adjust: exact;
-                    -webkit-print-color-adjust: exact;
+                    height:5px;
+                    background:#c5a253;
+                    margin:20px 0;
+                    print-color-adjust:exact;
+                    -webkit-print-color-adjust:exact;
                 }
 
                 table {
-                    width: 100%;
-                    border-collapse: collapse;
-                    font-size: 13px;
+                    width:100%;
+                    border-collapse:collapse;
+                    font-size:13px;
                 }
 
                 th {
-                    background: #111;
-                    color: white;
-                    text-align: left;
-                    padding: 12px;
-                    print-color-adjust: exact;
-                    -webkit-print-color-adjust: exact;
+                    background:#111;
+                    color:white;
+                    text-align:left;
+                    padding:12px;
+                    print-color-adjust:exact;
+                    -webkit-print-color-adjust:exact;
                 }
 
                 td {
-                    border-bottom: 1px solid #ddd;
-                    padding: 11px 12px;
+                    border-bottom:1px solid #ddd;
+                    padding:11px 12px;
                 }
 
                 th:first-child,
                 td:first-child {
-                    width: 70px;
-                    text-align: center;
+                    text-align:center;
                 }
 
                 tr {
-                    break-inside: avoid;
+                    break-inside:avoid;
                 }
 
                 thead {
-                    display: table-header-group;
+                    display:table-header-group;
                 }
 
                 .footer {
-                    margin-top: 25px;
-                    font-size: 11px;
-                    color: #666;
-                    text-align: center;
+                    margin-top:25px;
+                    font-size:11px;
+                    color:#666;
+                    text-align:center;
                 }
 
                 .print-button {
-                    display: block;
-                    margin: 20px auto;
-                    padding: 12px 24px;
-                    background: #c5a253;
-                    border: none;
-                    border-radius: 8px;
-                    font-size: 15px;
-                    font-weight: bold;
-                    cursor: pointer;
+                    display:block;
+                    margin:20px auto;
+                    padding:12px 24px;
+                    background:#c5a253;
+                    border:none;
+                    border-radius:8px;
+                    font-size:15px;
+                    font-weight:bold;
+                    cursor:pointer;
                 }
 
                 @media print {
                     .print-button {
-                        display: none;
+                        display:none;
                     }
                 }
             </style>
@@ -813,13 +948,12 @@ function downloadRosterPDF() {
                     <tr>
                         <th>Jersey #</th>
                         <th>Player Name</th>
+                        <th>Grade</th>
                         <th>Position</th>
                     </tr>
                 </thead>
 
-                <tbody>
-                    ${rows}
-                </tbody>
+                <tbody>${rows}</tbody>
             </table>
 
             <div class="footer">
