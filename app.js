@@ -1156,9 +1156,25 @@ function openLiveCourt() {
         <button>Position 5</button>
         <button>Position 6</button>
         <button>Position 1</button>
+     
       </div>
     </div>
 
+    <div class="serving-order-panel">
+      <h3>🏐 Serving Order</h3>
+      <p><strong>Status:</strong> Receiving</p>
+      <p><strong>Next Server:</strong> Not selected</p>
+
+      <h4>Serving Rotation</h4>
+      <ol>
+        <li>Player 1</li>
+        <li>Player 2</li>
+        <li>Player 3</li>
+        <li>Player 4</li>
+        <li>Player 5</li>
+        <li>Player 6</li>
+      </ol>
+    </div>
+
     <button onclick="goHome()">Back to Home</button>
-  `;
-}
+
