@@ -658,7 +658,7 @@ function savePlayerEdit() {
 // VIEW-ONLY ROSTER
 function openRoster() {
     document.querySelector("main").innerHTML = `
-        <h2>🏐 Team Roster</h2>
+        <h2>🏐 Roster</h2>
         <p style="text-align:center;color:#666;">
             Castle Heights Lady Knights
         </p>
