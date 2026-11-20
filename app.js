@@ -433,6 +433,7 @@ function openMatchSetup() {
     ).toISOString().slice(0, 10);
 
     document.getElementById("matchDate").value = localDate;
+populateStartingLineup();
 }
 
 function populateStartingLineup() {
