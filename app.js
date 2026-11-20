@@ -1333,7 +1333,21 @@ function openLiveCourt() {
 
     const name = player.name || "Unnamed Player";
     const number = player.number ?? "—";
-    const role = player.position ? ` (${player.position})` : "";
+    
+const positionAbbreviations = {
+    "Setter": "S",
+    "Libero": "L",
+    "Outside Hitter": "OH",
+    "Middle Hitter": "M",
+    "Middle Blocker": "M",
+    "Right Side Hitter": "RS",
+    "Opposite Hitter": "RS",
+    "Defensive Specialist": "DS"
+};
+
+const fullPosition = (player.position || "").trim();
+const role = positionAbbreviations[fullPosition] || fullPosition;
+
 
    
 return `
