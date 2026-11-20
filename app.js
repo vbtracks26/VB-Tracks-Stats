@@ -451,9 +451,24 @@ function populateStartingLineup() {
             const option = document.createElement("option");
 
             option.value = String(index);
-           const playerPosition = player.position
-    ? ` (${player.position})`
+           
+const positionAbbreviations = {
+    "Setter": "S",
+    "Libero": "L",
+    "Outside Hitter": "OH",
+    "Middle Hitter": "M",
+    "Middle Blocker": "M",
+    "Right Side Hitter": "RS",
+    "Opposite Hitter": "RS",
+    "Defensive Specialist": "DS"
+};
+
+const fullPosition = (player.position || "").trim();
+
+const role = fullPosition
+    ? (positionAbbreviations[fullPosition] || fullPosition)
     : "";
+
 
 option.textContent =
     `#${player.number ?? "—"} ${player.name || "Unnamed Player"}${playerPosition}`;
