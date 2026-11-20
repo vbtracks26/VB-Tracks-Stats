@@ -371,7 +371,14 @@ function openMatchSetup() {
             <option value="3">3 Sets (Default)</option>
             <option value="4">4 Sets</option>
             <option value="5">5 Sets</option>
-        </select>
+                </select>
+
+        <h3>Starting Lineup</h3>
+        <p>Select your six starting players and their court positions.</p>
+
+        <div id="startingLineup">
+            <p>Starting lineup selection coming next.</p>
+        </div>
 
         <button onclick="previewMatchSetup()">
             Preview Match
