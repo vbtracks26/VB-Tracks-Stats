@@ -700,3 +700,38 @@ main:has(.volleyball-court) .volleyball-court {
         grid-template-rows: repeat(2, 175px) !important;
     }
 }
+/* REMOVE BLACK BACKGROUND FROM LIVE COURT PLAYERS */
+
+.court-players button,
+.court-players button.court-player-card,
+.court-players button.court-player-card:hover,
+.court-players button.court-player-card:active {
+    background: transparent !important;
+    background-color: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    color: #171717 !important;
+}
+
+/* KEEP THE LARGE CIRCULAR PHOTO */
+
+.court-players .court-player-photo {
+    width: 105px !important;
+    height: 105px !important;
+    border: 3px solid #c5a253 !important;
+    border-radius: 50% !important;
+    background: #ffffff !important;
+}
+
+/* KEEP NAME AND POSITION UNDERNEATH */
+
+.court-players .court-player-name {
+    color: #171717 !important;
+    font-weight: bold !important;
+}
+
+.court-players .court-player-role {
+    color: #555555 !important;
+    font-weight: normal !important;
+}
