@@ -679,3 +679,24 @@ main:has(.volleyball-court) .volleyball-court {
         min-height: 110px !important;
     }
 }
+/* LARGER LIVE COURT PLAYER PHOTOS */
+
+.court-player-photo {
+    width: 105px !important;
+    height: 105px !important;
+}
+
+.court-players {
+    grid-template-rows: repeat(2, 190px) !important;
+}
+
+@media (max-width: 480px) {
+    .court-player-photo {
+        width: 90px !important;
+        height: 90px !important;
+    }
+
+    .court-players {
+        grid-template-rows: repeat(2, 175px) !important;
+    }
+}
