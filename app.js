@@ -435,6 +435,28 @@ function openMatchSetup() {
     document.getElementById("matchDate").value = localDate;
 }
 
+function populateStartingLineup() {
+    const positions = [4, 3, 2, 5, 6, 1];
+
+    positions.forEach(position => {
+        const dropdown = document.getElementById("starter" + position);
+
+        if (!dropdown) return;
+
+        dropdown.innerHTML = `<option value="">Select Player</option>`;
+
+        players.forEach((player, index) => {
+            const option = document.createElement("option");
+
+            option.value = String(index);
+            option.textContent =
+                `#${player.number ?? "—"} ${player.name || "Unnamed Player"}`;
+
+            dropdown.appendChild(option);
+        });
+    });
+}
+
 function previewMatchSetup() {
     const opponent = document.getElementById("matchOpponent")
         .value.trim();
