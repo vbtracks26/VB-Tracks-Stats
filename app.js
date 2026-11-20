@@ -437,8 +437,20 @@ populateStartingLineup();
 }
 
 
+
 function populateStartingLineup() {
     const positions = [4, 3, 2, 5, 6, 1];
+
+    const positionAbbreviations = {
+        "Setter": "S",
+        "Libero": "L",
+        "Outside Hitter": "OH",
+        "Middle Hitter": "M",
+        "Middle Blocker": "M",
+        "Right Side Hitter": "RS",
+        "Opposite Hitter": "RS",
+        "Defensive Specialist": "DS"
+    };
 
     positions.forEach(position => {
         const dropdown = document.getElementById("starter" + position);
@@ -451,27 +463,17 @@ function populateStartingLineup() {
             const option = document.createElement("option");
 
             option.value = String(index);
-           
-const positionAbbreviations = {
-    "Setter": "S",
-    "Libero": "L",
-    "Outside Hitter": "OH",
-    "Middle Hitter": "M",
-    "Middle Blocker": "M",
-    "Right Side Hitter": "RS",
-    "Opposite Hitter": "RS",
-    "Defensive Specialist": "DS"
-};
 
-const fullPosition = (player.position || "").trim();
+            const fullPosition = (player.position || "").trim();
+            const abbreviation =
+                positionAbbreviations[fullPosition] || fullPosition;
 
-const role = fullPosition
-    ? (positionAbbreviations[fullPosition] || fullPosition)
-    : "";
+            const playerPosition = abbreviation
+                ? ` (${abbreviation})`
+                : "";
 
-
-option.textContent =
-    `#${player.number ?? "—"} ${player.name || "Unnamed Player"}${playerPosition}`;
+            option.textContent =
+                `#${player.number ?? "—"} ${player.name || "Unnamed Player"}${playerPosition}`;
 
             dropdown.appendChild(option);
         });
@@ -482,33 +484,6 @@ option.textContent =
     updateStartingLineupOptions();
 }
 
-function updateStartingLineupOptions() {
-    const positions = [4, 3, 2, 5, 6, 1];
-
-    const selectedPlayers = positions
-        .map(position =>
-            document.getElementById("starter" + position)?.value
-        )
-        .filter(value => value !== "" && value !== undefined);
-
-    positions.forEach(position => {
-        const dropdown = document.getElementById("starter" + position);
-
-        if (!dropdown) return;
-
-        Array.from(dropdown.options).forEach(option => {
-            if (option.value === "") return;
-
-            option.hidden =
-                option.value !== dropdown.value &&
-                selectedPlayers.includes(option.value);
-
-            option.disabled =
-                option.value !== dropdown.value &&
-                selectedPlayers.includes(option.value);
-        });
-    });
-}
 
 
 function previewMatchSetup() {
