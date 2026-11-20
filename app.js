@@ -504,28 +504,68 @@ function previewMatchSetup() {
     const location = document.getElementById("matchLocation").value;
     const sets = document.getElementById("matchSets").value;
 
-    if (!opponent || !date) {
-        alert("Please enter an opponent and match date.");
-        return;
-    }
-
-    document.getElementById("matchPreviewMessage").textContent =
-        "Match ready: " + opponent +
-        " | " + date +
-        " | " + location +
-        " | " + sets + " sets. " +
-        
-"This is a preview only. Nothing has been saved.";
+    // Remove an old Start Match button, if one exists.
+    document.getElementById("startMatchButton")?.remove();
 
     const previewArea =
         document.getElementById("matchPreviewMessage");
 
+    if (!opponent || !date) {
+        previewArea.textContent = "";
+        alert("Please enter an opponent and match date.");
+        return;
+    }
+
+    // Check all six starting positions.
+    const positions = [4, 3, 2, 5, 6, 1];
+
+    const starters = positions.map(position =>
+        document.getElementById("starter" + position).value
+    );
+
+    if (starters.some(value => value === "")) {
+        previewArea.textContent = "";
+        alert("Please select all six starting players.");
+        return;
+    }
+
+    if (new Set(starters).size !== 6) {
+        previewArea.textContent = "";
+        alert("Each starting player must be different.");
+        return;
+    }
+
+    previewArea.textContent =
+        "Match ready: " + opponent +
+        " | " + date +
+        " | " + location +
+        " | " + sets + " sets. " +
+        "This is a preview only. Nothing has been saved.";
+
     const startButton = document.createElement("button");
+    startButton.id = "startMatchButton";
     startButton.textContent = "🏐 Start Match";
-    startButton.onclick = openLiveCourt;
+
+    startButton.onclick = function () {
+        // Check the lineup again in case it changed after preview.
+        const currentStarters = positions.map(position =>
+            document.getElementById("starter" + position).value
+        );
+
+        if (
+            currentStarters.some(value => value === "") ||
+            new Set(currentStarters).size !== 6
+        ) {
+            alert("Please select six different starting players.");
+            return;
+        }
+
+        openLiveCourt();
+    };
 
     previewArea.insertAdjacentElement("afterend", startButton);
 }
+
 
 
 // TEAM MANAGER
