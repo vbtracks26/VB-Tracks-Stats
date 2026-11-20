@@ -611,3 +611,71 @@ main:has(.volleyball-court) .volleyball-court {
     font-size: 10px;
   }
 }
+
+/* FIX LIVE COURT PLAYER CARD DESIGN */
+
+.court-players button.court-player-card {
+    width: 94% !important;
+    max-width: 150px !important;
+    height: 105px !important;
+    min-height: 105px !important;
+
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 5px !important;
+
+    padding: 8px 4px !important;
+    background: #171717 !important;
+    border: 2px solid #c5a253 !important;
+    border-radius: 12px !important;
+}
+
+.court-player-photo {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    border: 2px solid #c5a253;
+    border-radius: 50%;
+    background: #333333;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.court-player-name {
+    display: block;
+    font-size: 12px;
+    font-weight: bold;
+    color: #ffffff;
+    text-align: center;
+    line-height: 1.2;
+}
+
+.court-player-role {
+    display: block;
+    font-size: 11px;
+    font-weight: normal;
+    color: #c5a253;
+    text-align: center;
+    line-height: 1.2;
+}
+
+/* GIVE THE TALLER CARDS ROOM */
+
+.court-players {
+    grid-template-rows: repeat(2, 145px) !important;
+}
+
+@media (max-width: 480px) {
+    .court-players {
+        grid-template-rows: repeat(2, 125px) !important;
+    }
+
+    .court-players button.court-player-card {
+        height: 110px !important;
+        min-height: 110px !important;
+    }
+}
