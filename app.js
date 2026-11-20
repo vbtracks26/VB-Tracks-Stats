@@ -485,6 +485,34 @@ function populateStartingLineup() {
 }
 
 
+function updateStartingLineupOptions() {
+    const positions = [4, 3, 2, 5, 6, 1];
+
+    const selectedPlayers = positions
+        .map(position =>
+            document.getElementById("starter" + position)?.value
+        )
+        .filter(value => value !== "" && value !== undefined);
+
+    positions.forEach(position => {
+        const dropdown = document.getElementById("starter" + position);
+
+        if (!dropdown) return;
+
+        Array.from(dropdown.options).forEach(option => {
+            if (option.value === "") return;
+
+            option.hidden =
+                option.value !== dropdown.value &&
+                selectedPlayers.includes(option.value);
+
+            option.disabled =
+                option.value !== dropdown.value &&
+                selectedPlayers.includes(option.value);
+        });
+    });
+}
+
 
 function previewMatchSetup() {
     const opponent = document.getElementById("matchOpponent")
