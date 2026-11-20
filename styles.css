@@ -544,3 +544,70 @@ main:has(.volleyball-court) .volleyball-court {
 #startingLineup.lineup-court {
     background-color: #f5edda !important;
 }
+
+/* LIVE COURT PLAYER CARDS */
+
+.court-players button.court-player-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+
+  width: 94%;
+  max-width: 150px;
+  height: 105px;
+  padding: 6px 4px;
+
+  background: #171717;
+  color: #ffffff;
+  border: 2px solid #c5a253;
+  border-radius: 12px;
+}
+
+.court-player-photo {
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  border: 2px solid #c5a253;
+  border-radius: 50%;
+  background: #333333;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.court-photo-placeholder {
+  font-size: 24px;
+}
+
+.court-player-name {
+  font-size: 12px;
+  font-weight: bold;
+  color: #ffffff;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.court-player-role {
+  font-size: 11px;
+  font-weight: normal;
+  color: #c5a253;
+}
+
+@media (max-width: 480px) {
+  .court-players button.court-player-card {
+    height: 100px;
+    padding: 4px 2px;
+  }
+
+  .court-player-photo {
+    width: 36px;
+    height: 36px;
+  }
+
+  .court-player-name {
+    font-size: 10px;
+  }
+}
