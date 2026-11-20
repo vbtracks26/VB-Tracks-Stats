@@ -149,7 +149,7 @@ main:has(#editName) > button {
     margin: 20px auto;
     padding: 12px;
     box-sizing: border-box;
-    background: #e7c58b;
+    background: #f5edda;
     border: 3px solid #ffffff;
     border-radius: 12px;
 }
