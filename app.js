@@ -451,8 +451,12 @@ function populateStartingLineup() {
             const option = document.createElement("option");
 
             option.value = String(index);
-            option.textContent =
-                `#${player.number ?? "—"} ${player.name || "Unnamed Player"}`;
+           const playerPosition = player.position
+    ? ` (${player.position})`
+    : "";
+
+option.textContent =
+    `#${player.number ?? "—"} ${player.name || "Unnamed Player"}${playerPosition}`;
 
             dropdown.appendChild(option);
         });
