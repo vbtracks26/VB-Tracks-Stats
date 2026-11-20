@@ -376,7 +376,7 @@ function openMatchSetup() {
         <h3>Starting Lineup</h3>
         <p>Select your six starting players and their court positions.</p>
 
-        <
+        
 <div id="startingLineup" class="lineup-court">
 
   <div class="lineup-net">NET</div>
