@@ -560,6 +560,17 @@ function previewMatchSetup() {
             return;
         }
 
+                window.currentStartingLineup = {};
+
+        positions.forEach((position, index) => {
+            const playerIndex = Number(currentStarters[index]);
+
+            window.currentStartingLineup[position] = {
+                ...players[playerIndex],
+                rosterIndex: playerIndex
+            };
+        });
+
         openLiveCourt();
     };
 
@@ -1293,15 +1304,28 @@ function openLiveCourt() {
     <div class="volleyball-court">
       <div class="court-net">NET</div>
 
-      <div class="court-players">
-        <button>Position 4</button>
-        <button>Position 3</button>
-        <button>Position 2</button>
-        <button>Position 5</button>
-        <button>Position 6</button>
-        <button>Position 1</button>
-     
-      </div>
+      
+<div class="court-players">
+  ${[4, 3, 2, 5, 6, 1].map(position => {
+    const player = window.currentStartingLineup?.[position];
+
+    if (!player) {
+      return `<button>Position ${position}</button>`;
+    }
+
+    const name = player.name || "Unnamed Player";
+    const number = player.number ?? "—";
+    const role = player.position ? ` (${player.position})` : "";
+
+    return `
+      <button>
+        #${number}<br>
+        ${name}${role}
+      </button>
+    `;
+  }).join("")}
+</div>
+
     </div>
 
     <div class="serving-order-panel">
