@@ -454,3 +454,89 @@ main:has(.volleyball-court) .volleyball-court {
   text-align: center;
   border-radius: 8px;
 }
+
+/* STARTING LINEUP MINI VOLLEYBALL COURT */
+
+#startingLineup.lineup-court {
+  width: 100%;
+  max-width: 600px;
+  background: #e7c58b;
+  border: 4px solid #c5a253;
+  border-radius: 14px;
+  padding: 14px;
+  margin: 10px auto 20px;
+  box-sizing: border-box;
+}
+
+.lineup-net {
+  background: #171717;
+  color: #ffffff;
+  text-align: center;
+  padding: 12px;
+  font-weight: bold;
+  letter-spacing: 3px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+}
+
+.lineup-positions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.lineup-position {
+  min-width: 0;
+  background: #ffffff;
+  border: 2px solid #171717;
+  border-radius: 10px;
+  padding: 10px 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.lineup-position label {
+  width: 100%;
+  text-align: center;
+  font-size: 12px;
+  font-weight: bold;
+  color: #171717;
+}
+
+.lineup-position select {
+  width: 100%;
+  min-width: 0;
+  padding: 10px 4px;
+  font-size: 13px;
+  border: 2px solid #c5a253;
+  border-radius: 8px;
+  background: #f9f9f9;
+  color: #171717;
+}
+
+/* SMALL SCREEN ADJUSTMENTS */
+
+@media (max-width: 480px) {
+  #startingLineup.lineup-court {
+    padding: 8px;
+  }
+
+  .lineup-positions {
+    gap: 5px;
+  }
+
+  .lineup-position {
+    padding: 8px 3px;
+  }
+
+  .lineup-position label {
+    font-size: 10px;
+  }
+
+  .lineup-position select {
+    font-size: 12px;
+    padding: 8px 2px;
+  }
+}
