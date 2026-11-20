@@ -376,26 +376,44 @@ function openMatchSetup() {
         <h3>Starting Lineup</h3>
         <p>Select your six starting players and their court positions.</p>
 
-        <div id="startingLineup">
+        <
+<div id="startingLineup" class="lineup-court">
 
-    <label for="starter4">Position 4 — Left Front</label>
-    <select id="starter4" class="starter-select"></select>
+  <div class="lineup-net">NET</div>
 
-    <label for="starter3">Position 3 — Middle Front</label>
-    <select id="starter3" class="starter-select"></select>
+  <div class="lineup-positions">
 
-    <label for="starter2">Position 2 — Right Front</label>
-    <select id="starter2" class="starter-select"></select>
+    <div class="lineup-position">
+      <label for="starter4">Position 4 — Left Front</label>
+      <select id="starter4" class="starter-select"></select>
+    </div>
 
-    <label for="starter5">Position 5 — Left Back</label>
-    <select id="starter5" class="starter-select"></select>
+    <div class="lineup-position">
+      <label for="starter3">Position 3 — Middle Front</label>
+      <select id="starter3" class="starter-select"></select>
+    </div>
 
-    <label for="starter6">Position 6 — Middle Back</label>
-    <select id="starter6" class="starter-select"></select>
+    <div class="lineup-position">
+      <label for="starter2">Position 2 — Right Front</label>
+      <select id="starter2" class="starter-select"></select>
+    </div>
 
-    <label for="starter1">Position 1 — Right Back</label>
-    <select id="starter1" class="starter-select"></select>
+    <div class="lineup-position">
+      <label for="starter5">Position 5 — Left Back</label>
+      <select id="starter5" class="starter-select"></select>
+    </div>
 
+    <div class="lineup-position">
+      <label for="starter6">Position 6 — Middle Back</label>
+      <select id="starter6" class="starter-select"></select>
+    </div>
+
+    <div class="lineup-position">
+      <label for="starter1">Position 1 — Right Back</label>
+      <select id="starter1" class="starter-select"></select>
+    </div>
+
+  </div>
 </div>
 
         <button onclick="previewMatchSetup()">
