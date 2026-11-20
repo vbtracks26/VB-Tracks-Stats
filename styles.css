@@ -540,3 +540,7 @@ main:has(.volleyball-court) .volleyball-court {
     padding: 8px 2px;
   }
 }
+/* STARTING LINEUP COURT COLOR FIX */
+#startingLineup.lineup-court {
+    background-color: #f5edda !important;
+}
