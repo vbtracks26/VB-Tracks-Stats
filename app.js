@@ -1317,12 +1317,17 @@ function openLiveCourt() {
     const number = player.number ?? "—";
     const role = player.position ? ` (${player.position})` : "";
 
-    return `
-      <button>
-        #${number}<br>
-        ${name}${role}
-      </button>
-    `;
+   
+return `
+  <button class="court-player-card">
+    <span class="court-player-photo">
+      <span class="court-photo-placeholder">👤</span>
+    </span>
+    <span class="court-player-name">${name}</span>
+    <span class="court-player-role">${role}</span>
+  </button>
+`;
+
   }).join("")}
 </div>
 
